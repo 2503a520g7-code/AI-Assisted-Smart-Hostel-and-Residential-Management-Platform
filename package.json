@@ -1,0 +1,14 @@
+{
+  "name": "campus-lost-found-lambda-backend",
+  "version": "1.0.0",
+  "description": "AWS Lambda backend for Campus Lost & Found Smart Box with DynamoDB Document Client v3",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node test-local.js"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.700.0",
+    "@aws-sdk/lib-dynamodb": "^3.700.0"
+  }
+}

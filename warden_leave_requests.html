@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Leave Approvals{% endblock %}
+{% block page_title %}Hostel Leave & Movement Requests{% endblock %}
+
+{% block content %}
+<div class="content-card">
+  <div class="card-header-bar">
+    <div>
+      <h3>📋 Student Leave Applications</h3>
+      <p>Review, verify, and approve digital movement outpasses</p>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <!-- FILTER TABS -->
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+      <a href="{{ url_for('warden_leave_requests', status='Pending') }}" class="btn btn-{{ 'primary' if selected_status == 'Pending' else 'secondary' }} btn-sm">
+        Pending Review
+      </a>
+      <a href="{{ url_for('warden_leave_requests', status='Approved') }}" class="btn btn-{{ 'primary' if selected_status == 'Approved' else 'secondary' }} btn-sm">
+        Approved
+      </a>
+      <a href="{{ url_for('warden_leave_requests', status='Rejected') }}" class="btn btn-{{ 'primary' if selected_status == 'Rejected' else 'secondary' }} btn-sm">
+        Rejected
+      </a>
+      <a href="{{ url_for('warden_leave_requests', status='all') }}" class="btn btn-{{ 'primary' if selected_status == 'all' else 'secondary' }} btn-sm">
+        All Applications
+      </a>
+    </div>
+
+    <!-- LEAVE REQUESTS TABLE -->
+    {% if requests %}
+      <div class="table-responsive">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>Student Details</th>
+              <th>Permit Type</th>
+              <th>Dates & Destination</th>
+              <th>Reason & Contacts</th>
+              <th>Status</th>
+              <th>Decision / Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in requests %}
+              <tr>
+                <td>
+                  <div style="font-weight: 700; color: var(--dark-navy);">{{ r.student_name }}</div>
+                  <div style="font-size: 0.78rem; color: var(--muted-text);">{{ r.student_email }}</div>
+                  <div style="font-size: 0.75rem; color: var(--primary); font-weight: 600;">
+                    {{ r.hostel_block }} / Room {{ r.room_number or 'Unassigned' }}
+                  </div>
+                </td>
+                <td>
+                  <span class="badge badge-primary">{{ r.leave_type }}</span>
+                </td>
+                <td>
+                  <div style="font-size: 0.82rem;"><b>Depart:</b> {{ r.start_datetime.replace('T', ' ') }}</div>
+                  <div style="font-size: 0.82rem; color: var(--danger);"><b>Return:</b> {{ r.return_datetime.replace('T', ' ') }}</div>
+                  <div style="font-size: 0.78rem; color: var(--muted-text); margin-top: 2px;">📍 {{ r.destination }}</div>
+                </td>
+                <td>
+                  <div style="font-size: 0.82rem; color: var(--slate-text);">"{{ r.reason }}"</div>
+                  <div style="font-size: 0.75rem; color: var(--muted-text); margin-top: 2px;">
+                    Emerg: <b>{{ r.emergency_contact }}</b>
+                    {% if r.parent_phone %} · Parent: <b>{{ r.parent_phone }}</b>{% endif %}
+                  </div>
+                </td>
+                <td>
+                  {% if r.status == 'Approved' %}
+                    <span class="badge badge-success">Approved</span>
+                    {% if r.outpass_ref %}
+                      <div style="font-size: 0.72rem; margin-top: 2px;"><code>{{ r.outpass_ref }}</code></div>
+                    {% endif %}
+                  {% elif r.status == 'Rejected' %}
+                    <span class="badge badge-danger">Rejected</span>
+                  {% elif r.status == 'Pending' %}
+                    <span class="badge badge-warning">Pending Review</span>
+                  {% else %}
+                    <span class="badge badge-neutral">{{ r.status }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if r.status == 'Pending' %}
+                    <!-- APPROVAL / REJECTION FORM -->
+                    <form action="{{ url_for('warden_leave_action', leave_id=r.id) }}" method="POST" style="display: flex; flex-direction: column; gap: 0.35rem; min-width: 180px;">
+                      <input type="text" name="decision_note" class="form-control" style="font-size: 0.75rem; padding: 4px 8px;" placeholder="Optional decision remark...">
+                      <div style="display: flex; gap: 0.35rem;">
+                        <button type="submit" name="decision" value="Approved" class="btn btn-success btn-sm" style="flex: 1; padding: 3px 6px;">
+                          ✓ Approve
+                        </button>
+                        <button type="submit" name="decision" value="Rejected" class="btn btn-danger btn-sm" style="flex: 1; padding: 3px 6px;">
+                          ✕ Reject
+                        </button>
+                      </div>
+                    </form>
+                  {% else %}
+                    <div style="font-size: 0.78rem; color: var(--muted-text);">
+                      Decision recorded.<br/>
+                      {% if r.decision_note %}<i>"{{ r.decision_note }}"</i>{% endif %}
+                    </div>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">📋</div>
+        <h4>No Leave Applications</h4>
+        <p>No records found matching status "{{ selected_status }}".</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

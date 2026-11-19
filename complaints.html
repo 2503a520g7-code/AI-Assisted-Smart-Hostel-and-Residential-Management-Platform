@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Complaint Management{% endblock %}
+{% block page_title %}Hostel Complaints & Maintenance{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+  <!-- Submit Complaint Form -->
+  <div class="content-card">
+    <div class="card-header-bar">
+      <div>
+        <h3>🛠️ Report Maintenance Issue</h3>
+        <p>AI automatically predicts category and suggests priority</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <form action="{{ url_for('complaints') }}" method="POST">
+        <div class="form-group">
+          <label class="form-label" for="complaintSubject">Complaint Subject <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="complaintSubject" name="subject" class="form-control"
+                 placeholder="e.g. Bathroom tap leaking water continuously" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="complaintDescription">Detailed Description <span style="color:var(--danger)">*</span></label>
+          <textarea id="complaintDescription" name="description" rows="3" class="form-control"
+                    placeholder="Provide details about the issue, equipment involved, and since when..." required></textarea>
+        </div>
+
+        <!-- AI Real-time Auto-suggestion Pill Box -->
+        <div id="aiSuggestionBox" style="display: none; margin-bottom: 1.25rem;"></div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="complaintCategory">Issue Category</label>
+            <select id="complaintCategory" name="category" class="form-select">
+              <option value="Room Maintenance">Room Maintenance</option>
+              <option value="Electricity">Electricity</option>
+              <option value="Plumbing">Plumbing</option>
+              <option value="Cleanliness">Cleanliness</option>
+              <option value="Wi-Fi / Internet">Wi-Fi / Internet</option>
+              <option value="Mess Food">Mess Food</option>
+              <option value="Laundry">Laundry</option>
+              <option value="Security">Security</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="complaintPriority">Priority</label>
+            <select id="complaintPriority" name="priority" class="form-select">
+              <option value="Low">Low (Cosmetic / routine)</option>
+              <option value="Medium" selected>Medium (Standard attention)</option>
+              <option value="High">High (Impacting daily study/living)</option>
+              <option value="Urgent">Urgent (Safety or immediate service stoppage)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="location_or_room">Room / Hostel Location <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="location_or_room" name="location_or_room" class="form-control"
+                 value="{{ current_user.room_number and 'Room ' ~ current_user.room_number or '' }}"
+                 placeholder="e.g. Room 204 or Block A 2nd Floor Corridor" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          Submit Maintenance Ticket
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Complaint History & Response Thread -->
+  <div class="content-card">
+    <div class="card-header-bar">
+      <h3>📜 My Maintenance History</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      {% if complaints %}
+        <div style="display: grid; gap: 1rem; padding: 1.25rem;">
+          {% for c in complaints %}
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1.15rem; background: #ffffff;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                  <span style="font-family: monospace; font-size: 0.78rem; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-weight: 700; color: var(--dark-navy);">
+                    {{ c.complaint_code }}
+                  </span>
+                  <span class="badge badge-primary" style="margin-left: 4px;">{{ c.category }}</span>
+                  <span class="badge badge-{{ 'danger' if c.priority == 'Urgent' else 'warning' if c.priority == 'High' else 'neutral' }}">
+                    {{ c.priority }}
+                  </span>
+                </div>
+                <div>
+                  {% if c.status == 'Resolved' %}
+                    <span class="badge badge-success">Resolved</span>
+                  {% elif c.status == 'In Progress' %}
+                    <span class="badge badge-info">In Progress</span>
+                  {% elif c.status == 'Under Review' %}
+                    <span class="badge badge-warning">Under Review</span>
+                  {% elif c.status == 'Rejected' %}
+                    <span class="badge badge-danger">Rejected</span>
+                  {% else %}
+                    <span class="badge badge-neutral">Submitted</span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--dark-navy); margin-bottom: 0.25rem;">
+                {{ c.subject }}
+              </h4>
+              <p style="font-size: 0.85rem; color: var(--slate-text); margin-bottom: 0.5rem;">
+                {{ c.description }}
+              </p>
+              <div style="font-size: 0.75rem; color: var(--muted-text);">
+                📍 {{ c.location_or_room }} · Filed on {{ c.created_at[:16] }}
+                {% if c.assigned_to %} · <b>Assigned:</b> {{ c.assigned_to }}{% endif %}
+              </div>
+
+              {% if c.resolution_notes %}
+                <div style="background: #ecfdf5; border-left: 3px solid #10b981; padding: 0.6rem 0.85rem; border-radius: 4px; margin-top: 0.75rem; font-size: 0.82rem; color: #065f46;">
+                  <b>Resolution Note:</b> {{ c.resolution_notes }}
+                </div>
+              {% endif %}
+
+              <!-- Responses Thread -->
+              {% set replies = responses_map.get(c.id, []) %}
+              {% if replies %}
+                <div style="margin-top: 1rem; border-top: 1px dashed var(--border); padding-top: 0.75rem; display: grid; gap: 0.5rem;">
+                  <div style="font-size: 0.75rem; font-weight: 700; color: var(--muted-text); text-transform: uppercase;">
+                    Communication History
+                  </div>
+                  {% for r in replies %}
+                    <div style="padding: 0.5rem 0.75rem; border-radius: 6px; font-size: 0.82rem; background: {{ '#eef2ff' if r.is_warden else '#f8fafc' }};">
+                      <div style="font-weight: 600; color: {{ 'var(--primary)' if r.is_warden else 'var(--dark-navy)' }}; font-size: 0.76rem;">
+                        {{ 'Warden / Staff' if r.is_warden else r.responder_name }} · {{ r.created_at[:16] }}
+                      </div>
+                      <div style="color: var(--slate-text); margin-top: 2px;">{{ r.message }}</div>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+
+              <!-- Quick Student Reply Form -->
+              <form action="{{ url_for('reply_complaint', complaint_id=c.id) }}" method="POST" style="margin-top: 0.75rem; display: flex; gap: 0.5rem;">
+                <input type="text" name="message" class="form-control" style="padding: 0.4rem 0.75rem; font-size: 0.82rem;" placeholder="Add comment or reply..." required>
+                <button type="submit" class="btn btn-secondary btn-sm" style="white-space: nowrap;">Reply</button>
+              </form>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">🛠️</div>
+          <h4>No Complaints Filed</h4>
+          <p>Everything in order! If you face any room, electricity, or mess issue, report it on the left.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

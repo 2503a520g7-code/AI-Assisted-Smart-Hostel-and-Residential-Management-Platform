@@ -1,0 +1,219 @@
+{% extends "base.html" %}
+{% block title %}Hostel Fees{% endblock %}
+{% block page_title %}Hostel Accommodation Fees{% endblock %}
+
+{% block content %}
+<!-- FEE SUMMARY CARDS -->
+{% set latest = fee_records[0] if fee_records else None %}
+{% if latest %}
+  {% set balance = latest.total_amount - latest.amount_paid %}
+  <div class="metrics-grid" style="margin-bottom: 2rem;">
+    <div class="metric-card">
+      <div class="metric-info">
+        <div class="label">Total Billed Fee</div>
+        <div class="value">₹ {{ latest.total_amount | round(2) }}</div>
+        <div class="sub-text">{{ latest.academic_term }}</div>
+      </div>
+      <div class="metric-icon-wrap indigo">🏛️</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-info">
+        <div class="label">Amount Paid</div>
+        <div class="value" style="color: var(--success);">₹ {{ latest.amount_paid | round(2) }}</div>
+        <div class="sub-text">Cumulative verified</div>
+      </div>
+      <div class="metric-icon-wrap emerald">✓</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-info">
+        <div class="label">Outstanding Balance</div>
+        <div class="value" style="color: {{ 'var(--danger)' if balance > 0 else 'var(--success)' }};">
+          ₹ {{ balance | round(2) }}
+        </div>
+        <div class="sub-text">Due: {{ latest.due_date }}</div>
+      </div>
+      <div class="metric-icon-wrap {{ 'rose' if balance > 0 else 'emerald' }}">💳</div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-info">
+        <div class="label">Account Status</div>
+        <div class="value" style="font-size: 1.3rem;">
+          <span class="badge badge-{{ 'success' if latest.status == 'Paid' else 'warning' if latest.status == 'Partially Paid' else 'danger' }}">
+            {{ latest.status }}
+          </span>
+        </div>
+        <div class="sub-text">
+          {% if balance > 0 %}
+            <button type="button" class="btn btn-primary btn-sm" style="margin-top: 6px;"
+                    onclick="preparePaymentModal({{ latest.id }}, {{ latest.total_amount }}, {{ latest.amount_paid }}, 'hostel')">
+              Pay Balance Now
+            </button>
+          {% else %}
+            No Dues Pending
+          {% endif %}
+        </div>
+      </div>
+      <div class="metric-icon-wrap sky">📑</div>
+    </div>
+  </div>
+{% endif %}
+
+<!-- FEE RECORDS LEDGER -->
+<div class="content-card">
+  <div class="card-header-bar">
+    <div>
+      <h3>💳 Semester Fee Ledgers</h3>
+      <p>Official statement of hostel accommodation and facilities charges</p>
+    </div>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    {% if fee_records %}
+      <div class="table-responsive">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>Term / Cycle</th>
+              <th>Total Fee</th>
+              <th>Paid</th>
+              <th>Balance</th>
+              <th>Due Date</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in fee_records %}
+              {% set bal = f.total_amount - f.amount_paid %}
+              <tr>
+                <td><b>{{ f.academic_term }}</b></td>
+                <td>₹ {{ f.total_amount | round(2) }}</td>
+                <td style="color: var(--success); font-weight: 600;">₹ {{ f.amount_paid | round(2) }}</td>
+                <td style="font-weight: 700; color: {{ 'var(--danger)' if bal > 0 else 'var(--muted-text)' }};">
+                  ₹ {{ bal | round(2) }}
+                </td>
+                <td>{{ f.due_date }}</td>
+                <td>
+                  <span class="badge badge-{{ 'success' if f.status == 'Paid' else 'warning' }}">
+                    {{ f.status }}
+                  </span>
+                </td>
+                <td>
+                  {% if bal > 0 %}
+                    <button type="button" class="btn btn-primary btn-sm"
+                            onclick="preparePaymentModal({{ f.id }}, {{ f.total_amount }}, {{ f.amount_paid }}, 'hostel')">
+                      Pay Due
+                    </button>
+                  {% else %}
+                    <span class="badge badge-success">Completed</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">💳</div>
+        <h4>No Fee Records Found</h4>
+        <p>Hostel accounts team has not billed any charges yet.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- PAYMENT TRANSACTIONS & RECEIPTS -->
+<div class="content-card">
+  <div class="card-header-bar">
+    <div>
+      <h3>📜 Payment History & Official Receipts</h3>
+      <p>Download verified receipts for all completed payments</p>
+    </div>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    {% if payments %}
+      <div class="table-responsive">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>Transaction Ref</th>
+              <th>Date</th>
+              <th>Amount Paid</th>
+              <th>Method</th>
+              <th>Status</th>
+              <th>Receipt</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in payments %}
+              <tr>
+                <td><code>{{ p.transaction_ref }}</code></td>
+                <td>{{ p.created_at[:16] }}</td>
+                <td style="font-weight: 700; color: var(--success);">₹ {{ p.amount | round(2) }}</td>
+                <td>{{ p.payment_method }}</td>
+                <td><span class="badge badge-success">{{ p.payment_status }}</span></td>
+                <td>
+                  <a href="{{ url_for('download_receipt_pdf', fee_type='hostel', payment_id=p.id) }}" class="btn btn-secondary btn-sm">
+                    📥 Download PDF
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">🧾</div>
+        <h4>No Transactions Recorded</h4>
+        <p>Payments made will appear here with official downloadable PDF receipts.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- DEMO ONLINE PAYMENT MODAL -->
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal-content-box">
+    <div class="modal-header-bar">
+      <h4>💳 Make Hostel Fee Payment (Demo Gateway)</h4>
+      <button type="button" class="modal-close-btn" onclick="closeModal('paymentModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <form action="{{ url_for('pay_hostel_fee') }}" method="POST">
+        <input type="hidden" name="record_id" id="payRecordId">
+        
+        <div style="background: var(--purple-soft); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem;">
+          <div style="font-size: 0.8rem; color: var(--muted-text);">Current Outstanding Due:</div>
+          <div style="font-size: 1.5rem; font-weight: 800; color: var(--primary);" id="payDueDisplay">₹ 0.00</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="payAmount">Amount to Pay (INR)</label>
+          <input type="number" id="payAmount" name="amount" step="0.01" min="1" class="form-control" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="payment_method">Payment Mode (Simulated)</label>
+          <select id="payment_method" name="payment_method" class="form-select">
+            <option value="Demo Online NetBanking">Demo Online NetBanking</option>
+            <option value="Demo UPI / QR Transfer">Demo UPI / QR Transfer</option>
+            <option value="Demo Debit Card">Demo Debit Card</option>
+          </select>
+        </div>
+
+        <div style="font-size: 0.78rem; color: var(--muted-text); margin-bottom: 1.25rem;">
+          🔒 <b>Secure Payment Simulation:</b> This demo gateway issues a verified transaction reference and instant PDF receipt without collecting real card numbers or banking passwords.
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          Confirm & Pay Demo Amount
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

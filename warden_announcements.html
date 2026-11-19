@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Announcements{% endblock %}
+{% block page_title %}Hostel Broadcasts & Announcements{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  <!-- Create Announcement Form -->
+  <div class="content-card" style="margin-bottom: 0;">
+    <div class="card-header-bar">
+      <h3>📢 Broadcast New Announcement</h3>
+    </div>
+    <div class="card-body">
+      <form action="{{ url_for('warden_announcements') }}" method="POST">
+        <input type="hidden" name="action" value="create">
+
+        <div class="form-group">
+          <label class="form-label" for="title">Announcement Headline <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="title" name="title" class="form-control"
+                 placeholder="e.g. Annual Hostel Cultural Night Registration" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="content">Announcement Message Body <span style="color:var(--danger)">*</span></label>
+          <textarea id="content" name="content" rows="4" class="form-control"
+                    placeholder="Provide full announcement details, deadlines, and instructions..." required></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="target_audience">Target Audience</label>
+            <select id="target_audience" name="target_audience" class="form-select">
+              <option value="all">All Hostel Residents</option>
+              <option value="block">Specific Hostel Block Only</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="priority">Priority</label>
+            <select id="priority" name="priority" class="form-select">
+              <option value="normal">Normal Announcement</option>
+              <option value="urgent">Urgent Notice</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          Publish & Send In-App Notification
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Announcement Best Practices -->
+  <div class="content-card" style="margin-bottom: 0;">
+    <div class="card-header-bar">
+      <h3>💡 Announcement Guidelines</h3>
+    </div>
+    <div class="card-body" style="font-size: 0.88rem; color: var(--slate-text); line-height: 1.6;">
+      <p>Broadcasting an announcement triggers an instant notification on student dashboards.</p>
+      <ul style="padding-left: 1.25rem; margin-top: 0.75rem; display: grid; gap: 0.5rem;">
+        <li>Use <b>Urgent Notice</b> for water supply maintenance, power shutdowns, or curfew changes.</li>
+        <li>Announcements remain prominently displayed on student dashboards until removed.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ACTIVE ANNOUNCEMENTS DIRECTORY -->
+<div class="content-card">
+  <div class="card-header-bar">
+    <div>
+      <h3>📢 Active Hostel Broadcasts</h3>
+      <p>Currently displayed on student resident dashboards</p>
+    </div>
+  </div>
+  <div class="card-body">
+    {% if announcements %}
+      <div style="display: grid; gap: 1rem;">
+        {% for a in announcements %}
+          <div style="background: #f8fafc; border-left: 4px solid {{ '#ef4444' if a.priority == 'urgent' else 'var(--primary)' }}; padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem; flex-wrap: wrap; gap: 0.5rem;">
+              <div>
+                <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--dark-navy);">{{ a.title }}</h4>
+                <div style="font-size: 0.75rem; color: var(--muted-text); margin-top: 2px;">
+                  Published: {{ a.created_at[:16] }} · Target: <b>{{ a.target_audience | capitalize }}</b>
+                  {% if a.priority == 'urgent' %}· <span class="badge badge-danger">Urgent</span>{% endif %}
+                </div>
+              </div>
+              <div>
+                <form action="{{ url_for('warden_announcements') }}" method="POST" onsubmit="return confirm('Remove this announcement?');">
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="announcement_id" value="{{ a.id }}">
+                  <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger); font-size: 0.75rem;">
+                    Remove
+                  </button>
+                </form>
+              </div>
+            </div>
+            <p style="font-size: 0.88rem; color: var(--slate-text); line-height: 1.5;">
+              {{ a.content }}
+            </p>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">📢</div>
+        <h4>No Active Announcements</h4>
+        <p>Use the form above to publish your first announcement to students.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

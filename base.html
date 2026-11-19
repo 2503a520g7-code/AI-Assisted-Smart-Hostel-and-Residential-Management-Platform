@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Dashboard{% endblock %} — AIAC Smart Residential Platform</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏢</text></svg>">
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+<div class="app-wrapper">
+  <!-- SIDEBAR NAVIGATION -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand-logo">AI</div>
+      <div class="brand-text">
+        <h1>AIAC Hostel</h1>
+        <span>Smart Residence</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      {% if current_user and current_user.role == 'warden' %}
+        <!-- WARDEN NAVIGATION -->
+        <div class="nav-group-label">Administration</div>
+        <a href="{{ url_for('warden_dashboard') }}" class="nav-item {% if request.path == '/warden/dashboard' %}active{% endif %}">
+          <span class="icon">📊</span> Overview
+        </a>
+        <a href="{{ url_for('warden_students') }}" class="nav-item {% if '/warden/students' in request.path %}active{% endif %}">
+          <span class="icon">👥</span> Student Management
+        </a>
+        <a href="{{ url_for('warden_rooms') }}" class="nav-item {% if '/warden/rooms' in request.path %}active{% endif %}">
+          <span class="icon">🛏️</span> Room Management
+        </a>
+
+        <div class="nav-group-label">Approvals & Safety</div>
+        <a href="{{ url_for('warden_leave_requests') }}" class="nav-item {% if '/warden/leave-requests' in request.path %}active{% endif %}">
+          <span class="icon">📝</span> Leave Requests
+        </a>
+        <a href="{{ url_for('warden_outpasses') }}" class="nav-item {% if '/warden/outpasses' in request.path %}active{% endif %}">
+          <span class="icon">🎫</span> Outpass Records
+        </a>
+        <a href="{{ url_for('warden_emergencies') }}" class="nav-item {% if '/warden/emergencies' in request.path %}active{% endif %}">
+          <span class="icon">🚨</span> Emergency Desk
+        </a>
+        <a href="{{ url_for('warden_complaints') }}" class="nav-item {% if '/warden/complaints' in request.path %}active{% endif %}">
+          <span class="icon">🛠️</span> Complaints Desk
+        </a>
+
+        <div class="nav-group-label">Hospitality & Accounts</div>
+        <a href="{{ url_for('warden_mess_menu') }}" class="nav-item {% if '/warden/mess-menu' in request.path %}active{% endif %}">
+          <span class="icon">🍽️</span> Mess Menu Management
+        </a>
+        <a href="{{ url_for('warden_fees') }}" class="nav-item {% if '/warden/fees' in request.path %}active{% endif %}">
+          <span class="icon">💳</span> Fee Management
+        </a>
+        <a href="{{ url_for('warden_laundry') }}" class="nav-item {% if '/warden/laundry' in request.path %}active{% endif %}">
+          <span class="icon">🧺</span> Laundry Management
+        </a>
+        <a href="{{ url_for('holiday_calendar') }}" class="nav-item {% if request.path == '/holiday-calendar' %}active{% endif %}">
+          <span class="icon">📅</span> Holiday Calendar
+        </a>
+        <a href="{{ url_for('warden_announcements') }}" class="nav-item {% if '/warden/announcements' in request.path %}active{% endif %}">
+          <span class="icon">📢</span> Announcements
+        </a>
+        <a href="{{ url_for('warden_reports') }}" class="nav-item {% if '/warden/reports' in request.path %}active{% endif %}">
+          <span class="icon">📈</span> Reports & Analytics
+        </a>
+        <a href="{{ url_for('warden_settings') }}" class="nav-item {% if '/warden/settings' in request.path %}active{% endif %}">
+          <span class="icon">⚙️</span> Settings
+        </a>
+
+      {% else %}
+        <!-- STUDENT NAVIGATION -->
+        <div class="nav-group-label">Student Hub</div>
+        <a href="{{ url_for('student_dashboard') }}" class="nav-item {% if request.path == '/dashboard' %}active{% endif %}">
+          <span class="icon">🏠</span> Dashboard
+        </a>
+        <a href="{{ url_for('profile') }}" class="nav-item {% if request.path == '/profile' %}active{% endif %}">
+          <span class="icon">👤</span> My Profile
+        </a>
+        <a href="{{ url_for('room_details') }}" class="nav-item {% if request.path == '/room-details' %}active{% endif %}">
+          <span class="icon">🛏️</span> My Room Details
+        </a>
+
+        <div class="nav-group-label">Leave & Movement</div>
+        <a href="{{ url_for('leave_management') }}" class="nav-item {% if request.path == '/leave' %}active{% endif %}">
+          <span class="icon">📝</span> Leave Management
+        </a>
+        <a href="{{ url_for('leave_outing') }}" class="nav-item {% if request.path == '/leave/outing' %}active{% endif %}">
+          <span class="icon">🚶</span> One-Day Outing
+        </a>
+        <a href="{{ url_for('leave_vacation') }}" class="nav-item {% if request.path == '/leave/vacation' %}active{% endif %}">
+          <span class="icon">🧳</span> Vacation Request (10 Days)
+        </a>
+        <a href="{{ url_for('outpass_status') }}" class="nav-item {% if request.path == '/outpass-status' %}active{% endif %}">
+          <span class="icon">🎫</span> Outpass Status
+        </a>
+
+        <div class="nav-group-label">Support & Safety</div>
+        <a href="{{ url_for('complaints') }}" class="nav-item {% if request.path == '/complaints' %}active{% endif %}">
+          <span class="icon">🛠️</span> Complaints
+        </a>
+        <a href="{{ url_for('emergency_support') }}" class="nav-item {% if request.path == '/emergency' %}active{% endif %}">
+          <span class="icon">🚨</span> Emergency Contact to Warden
+        </a>
+
+        <div class="nav-group-label">Dining & Services</div>
+        <a href="{{ url_for('mess_menu') }}" class="nav-item {% if request.path == '/mess-menu' %}active{% endif %}">
+          <span class="icon">🍽️</span> Mess Menu
+        </a>
+        <a href="{{ url_for('hostel_fees') }}" class="nav-item {% if request.path == '/hostel-fees' %}active{% endif %}">
+          <span class="icon">💳</span> Hostel Fee Details
+        </a>
+        <a href="{{ url_for('dhobi_fees') }}" class="nav-item {% if request.path == '/dhobi-fees' %}active{% endif %}">
+          <span class="icon">🧺</span> Dhobi Fee Details
+        </a>
+        <a href="{{ url_for('laundry') }}" class="nav-item {% if request.path == '/laundry' %}active{% endif %}">
+          <span class="icon">👕</span> Washing Availability & Pickup
+        </a>
+
+        <div class="nav-group-label">Campus & System</div>
+        <a href="{{ url_for('holiday_calendar') }}" class="nav-item {% if request.path == '/holiday-calendar' %}active{% endif %}">
+          <span class="icon">📅</span> Holiday Calendar
+        </a>
+        <a href="{{ url_for('notifications') }}" class="nav-item {% if request.path == '/notifications' %}active{% endif %}">
+          <span class="icon">🔔</span> Notifications
+        </a>
+        <a href="{{ url_for('settings') }}" class="nav-item {% if request.path == '/settings' %}active{% endif %}">
+          <span class="icon">⚙️</span> Settings
+        </a>
+      {% endif %}
+
+      <div style="margin-top: 1.5rem;">
+        <a href="{{ url_for('logout') }}" class="nav-item" style="color: var(--danger);">
+          <span class="icon">🚪</span> Sign Out
+        </a>
+      </div>
+    </nav>
+
+    <!-- SIDEBAR FOOTER -->
+    {% if current_user %}
+    <div class="sidebar-footer">
+      <div class="user-quick-profile">
+        <div class="avatar-circle">
+          {{ current_user.name[0] | upper }}
+        </div>
+        <div class="user-info-text">
+          <div class="name">{{ current_user.name }}</div>
+          <div class="role-badge">{{ current_user.role | capitalize }}</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </aside>
+
+  <!-- MAIN WRAPPER -->
+  <div class="main-wrapper">
+    <!-- TOPBAR -->
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="mobile-toggle" id="mobileToggle" aria-label="Toggle menu">☰</button>
+        <div class="topbar-title">
+          <h2>{% block page_title %}Dashboard{% endblock %}</h2>
+          <p>{{ hostel_name }}</p>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        {% if current_user %}
+          <!-- Prominent Emergency Alert Shortcut -->
+          <a href="{{ url_for('emergency_support') if current_user.role == 'student' else url_for('warden_emergencies') }}" class="emergency-btn-top">
+            <span>🚨</span> Emergency Alert
+          </a>
+
+          <!-- Notifications Bell with Live Counter -->
+          <a href="{{ url_for('notifications') }}" class="notification-bell" title="Notifications">
+            <span>🔔</span>
+            {% if unread_notifications_count > 0 %}
+              <span class="badge">{{ unread_notifications_count }}</span>
+            {% endif %}
+          </a>
+
+          <!-- Profile Avatar & Link -->
+          <a href="{{ url_for('profile') if current_user.role == 'student' else url_for('warden_settings') }}" style="display:flex; align-items:center; gap:0.5rem; text-decoration:none;">
+            <div class="avatar-circle" style="width:34px; height:34px; font-size:0.85rem;">
+              {{ current_user.name[0] | upper }}
+            </div>
+          </a>
+        {% else %}
+          <div style="display:flex; gap:0.5rem;">
+            <a href="{{ url_for('login') }}" class="btn btn-primary btn-sm">Sign In</a>
+            <a href="{{ url_for('register') }}" class="btn btn-secondary btn-sm">Register</a>
+          </div>
+        {% endif %}
+      </div>
+    </header>
+
+    <!-- CONTENT BODY -->
+    <main class="page-container">
+      <!-- FLASH MESSAGES -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-messages-container">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                <span>{{ message }}</span>
+                <button type="button" class="close-btn" aria-label="Close">&times;</button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+</div>
+
+<!-- FLOATING AIAC VIRTUAL CONCIERGE WIDGET -->
+<button class="chatbot-toggle-btn" id="chatbotToggle" title="Ask AIAC Virtual Assistant" aria-label="Open AI Hostel Assistant">
+  🤖
+</button>
+
+<div class="chatbot-window" id="chatbotWindow">
+  <div class="chat-header">
+    <div>
+      <h4>🤖 AIAC Assistant</h4>
+      <span>Smart Hostel Concierge & FAQs</span>
+    </div>
+    <button class="chat-close-btn" id="chatCloseBtn">&times;</button>
+  </div>
+
+  <div class="chat-messages" id="chatMessages">
+    <div class="chat-msg bot">
+      Hello <b>{{ current_user.name.split()[0] if current_user else 'Resident' }}</b>! I am your 24/7 AIAC Hostel Concierge. How can I assist you with leaves, mess timings, laundry schedules, or helplines today?
+    </div>
+  </div>
+
+  <!-- Quick Query Chips -->
+  <div class="chat-chips">
+    <button type="button" class="chip-btn" data-prompt="What are mess timings and special meals?">Mess Timings</button>
+    <button type="button" class="chip-btn" data-prompt="What are the outpass and curfew rules?">Outpass & Curfew</button>
+    <button type="button" class="chip-btn" data-prompt="How does laundry collection work?">Laundry Schedule</button>
+    <button type="button" class="chip-btn" data-prompt="Show emergency helpline numbers">Emergency Contacts</button>
+  </div>
+
+  <div class="chat-input-bar">
+    <input type="text" id="chatInput" placeholder="Ask about hostel rules, fees, food...">
+    <button type="button" id="chatSendBtn">➤</button>
+  </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/chatbot.js') }}"></script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+{% block title %}
+  {% if is_warden_view %}Issued Outpass Records{% else %}Official Digital Outpass — {{ outpass.outpass_ref }}{% endif %}
+{% endblock %}
+
+{% block page_title %}
+  {% if is_warden_view %}Master Outpass Registry{% else %}Student Movement Permit{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if is_warden_view %}
+  <!-- WARDEN VIEW: ALL OUTPASSES -->
+  <div class="content-card">
+    <div class="card-header-bar">
+      <div>
+        <h3>🎫 Master Outpass Registry</h3>
+        <p>All officially authorized movement outpasses issued to residents</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="table-toolbar">
+        <div class="search-box">
+          <span class="icon">🔍</span>
+          <input type="text" placeholder="Search by student name, room, ref..." data-table-search="outpassesTable">
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="modern-table" id="outpassesTable">
+          <thead>
+            <tr>
+              <th>Reference</th>
+              <th>Student</th>
+              <th>Block & Room</th>
+              <th>Departure Time</th>
+              <th>Return Time</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for o in all_outpasses %}
+              <tr>
+                <td><code>{{ o.outpass_ref }}</code></td>
+                <td>
+                  <div style="font-weight: 600; color: var(--dark-navy);">{{ o.student_name }}</div>
+                  <div style="font-size: 0.78rem; color: var(--muted-text);">{{ o.student_email }}</div>
+                </td>
+                <td>{{ o.hostel_block }} / {{ o.room_number or 'Unassigned' }}</td>
+                <td>{{ o.departure_datetime.replace('T', ' ') }}</td>
+                <td>{{ o.expected_return_datetime.replace('T', ' ') }}</td>
+                <td><span class="badge badge-success">{{ o.status }}</span></td>
+                <td>
+                  <a href="{{ url_for('view_outpass', outpass_id=o.id) }}" class="btn btn-secondary btn-sm">
+                    View
+                  </a>
+                  <a href="{{ url_for('download_outpass_pdf', outpass_id=o.id) }}" class="btn btn-primary btn-sm">
+                    PDF
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+{% else %}
+  <!-- SINGLE OUTPASS DOCUMENT VIEW -->
+  <div style="max-width: 800px; margin: 0 auto;">
+    <!-- Action Bar -->
+    <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+      <a href="{{ url_for('leave_management') if current_user.role == 'student' else url_for('warden_outpasses') }}" class="btn btn-secondary btn-sm">
+        ← Back to List
+      </a>
+      <div style="display: flex; gap: 0.75rem;">
+        <button type="button" onclick="window.print()" class="btn btn-secondary">
+          🖨️ Print Outpass
+        </button>
+        <a href="{{ url_for('download_outpass_pdf', outpass_id=outpass.id) }}" class="btn btn-primary">
+          📥 Download Official PDF
+        </a>
+      </div>
+    </div>
+
+    <!-- Official Printable Outpass Card -->
+    <div class="content-card printable-document" style="padding: 2.5rem; background: #ffffff; border: 2px solid var(--border); border-radius: var(--radius-md);">
+      <!-- Document Header -->
+      <div style="text-align: center; border-bottom: 2px solid var(--primary); padding-bottom: 1.25rem; margin-bottom: 1.75rem;">
+        <div style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--muted-text); font-weight: 700;">
+          {{ hostel_name }}
+        </div>
+        <h2 style="font-size: 1.6rem; color: var(--dark-navy); margin: 0.25rem 0;">
+          OFFICIAL STUDENT OUTPASS PERMIT
+        </h2>
+        <div style="font-size: 0.85rem; color: var(--primary); font-weight: 600;">
+          Digital Movement Verification & Security Gate Authorization
+        </div>
+      </div>
+
+      <!-- Reference & Verification Banner -->
+      <div style="background: var(--purple-soft); border: 1px solid #c7d2fe; border-radius: var(--radius-sm); padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.75rem;">
+        <div>
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--muted-text); font-weight: 700;">Outpass Reference</div>
+          <div style="font-size: 1.25rem; font-weight: 800; color: var(--primary);">{{ outpass.outpass_ref }}</div>
+        </div>
+        <div style="text-align: center;">
+          <span class="badge badge-success" style="font-size: 0.85rem; padding: 6px 12px;">
+            ✓ VERIFIED & APPROVED
+          </span>
+        </div>
+        <div>
+          <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--muted-text); font-weight: 700;">Verification Token</div>
+          <div style="font-family: monospace; font-size: 1rem; font-weight: 700; color: var(--dark-navy);">{{ outpass.verification_code }}</div>
+        </div>
+      </div>
+
+      <!-- Student Credentials Table -->
+      <div style="margin-bottom: 1.75rem;">
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--dark-navy); margin-bottom: 0.75rem; border-left: 3px solid var(--primary); padding-left: 0.5rem;">
+          Resident Student Credentials
+        </h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; background: #f8fafc; padding: 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border);">
+          <div>
+            <div style="font-size: 0.75rem; color: var(--muted-text);">Full Legal Name</div>
+            <div style="font-weight: 700; color: var(--dark-navy);">{{ outpass.student_name }}</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: var(--muted-text);">College Email</div>
+            <div style="font-weight: 600; color: var(--dark-navy);">{{ outpass.student_email }}</div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: var(--muted-text);">Hostel Wing & Room</div>
+            <div style="font-weight: 700; color: var(--primary);">
+              {{ outpass.hostel_block }} / Room {{ outpass.room_number or 'Unassigned' }}
+            </div>
+          </div>
+          <div>
+            <div style="font-size: 0.75rem; color: var(--muted-text);">Academic Year</div>
+            <div style="font-weight: 600; color: var(--dark-navy);">{{ outpass.academic_year }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Leave & Movement Particulars -->
+      <div style="margin-bottom: 2rem;">
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--dark-navy); margin-bottom: 0.75rem; border-left: 3px solid var(--primary); padding-left: 0.5rem;">
+          Movement Authorization Details
+        </h4>
+        <div style="display: grid; gap: 0.65rem; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--muted-text);">Permit Type:</span>
+            <span style="font-weight: 600; color: var(--dark-navy);">{{ outpass.leave_type }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--muted-text);">Departure Date & Time:</span>
+            <span style="font-weight: 700; color: var(--dark-navy);">{{ outpass.departure_datetime.replace('T', ' ') }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--muted-text);">Strict Return Deadline:</span>
+            <span style="font-weight: 700; color: var(--danger);">{{ outpass.expected_return_datetime.replace('T', ' ') }} (Curfew Applies)</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--muted-text);">Approved Destination:</span>
+            <span style="font-weight: 600; color: var(--dark-navy);">📍 {{ outpass.destination }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--muted-text);">Reason Stated:</span>
+            <span style="color: var(--slate-text);">{{ outpass.reason }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--muted-text);">Emergency Contact:</span>
+            <span style="font-weight: 600; color: var(--dark-navy);">📞 {{ outpass.emergency_contact }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--muted-text);">Approving Authority:</span>
+            <span style="font-weight: 600; color: var(--primary);">{{ outpass.warden_full_name or 'Hostel Warden Desk' }}</span>
+          </div>
+          {% if outpass.decision_note %}
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--muted-text);">Warden Note:</span>
+            <span style="color: var(--slate-text); font-style: italic;">"{{ outpass.decision_note }}"</span>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Security Sign-off Stamps -->
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; border-top: 1px dashed var(--border); padding-top: 1.5rem; text-align: center;">
+        <div style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem;">
+          <div style="font-weight: 700; font-size: 0.82rem; color: var(--dark-navy);">Security Exit Stamp</div>
+          <div style="height: 48px;"></div>
+          <div style="font-size: 0.72rem; color: var(--muted-text);">Sign & Exit Time</div>
+        </div>
+        <div style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem;">
+          <div style="font-weight: 700; font-size: 0.82rem; color: var(--dark-navy);">Security Entry Stamp</div>
+          <div style="height: 48px;"></div>
+          <div style="font-size: 0.72rem; color: var(--muted-text);">Sign & Entry Time</div>
+        </div>
+        <div style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem;">
+          <div style="font-weight: 700; font-size: 0.82rem; color: var(--primary);">Digital Seal Verification</div>
+          <div style="height: 48px; display:flex; align-items:center; justify-content:center; color:var(--success); font-weight:800; font-size:1.2rem;">
+            AUTHENTIC
+          </div>
+          <div style="font-size: 0.72rem; color: var(--muted-text);">AIAC Automated Gate Pass</div>
+        </div>
+      </div>
+
+      <div style="font-size: 0.75rem; color: #94a3b8; text-align: center; margin-top: 1.5rem;">
+        Issued: {{ outpass.issued_datetime }} · Valid for stated dates only. Misuse of outpass will attract disciplinary action.
+      </div>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

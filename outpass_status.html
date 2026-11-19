@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% block title %}Outpass Status & Digital Permits{% endblock %}
+{% block page_title %}Digital Movement Outpass Status{% endblock %}
+
+{% block content %}
+<!-- LEAVE MODULE NAVIGATION TABS -->
+<div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+  <a href="{{ url_for('leave_outing') }}" class="btn btn-secondary btn-sm">
+    🚶 One-Day Outing
+  </a>
+  <a href="{{ url_for('leave_vacation') }}" class="btn btn-secondary btn-sm">
+    🧳 Vacation Request (10 Days)
+  </a>
+  <a href="{{ url_for('leave_management') }}" class="btn btn-secondary btn-sm">
+    📝 General Leave Desk
+  </a>
+  <a href="{{ url_for('outpass_status') }}" class="btn btn-primary btn-sm">
+    🎫 Outpass Status
+  </a>
+</div>
+
+<!-- ACTIVE AUTHORIZED OUTPASSES -->
+<div class="content-card">
+  <div class="card-header-bar">
+    <div>
+      <h3>🎫 Official Authorized Movement Outpasses</h3>
+      <p>Show these passes at the hostel main security gate when departing or arriving</p>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+      <a href="{{ url_for('leave_outing') }}" class="btn btn-primary btn-sm">
+        + Apply Day Outing
+      </a>
+      <a href="{{ url_for('leave_vacation') }}" class="btn btn-secondary btn-sm">
+        + Apply Vacation
+      </a>
+    </div>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    {% if approved_outpasses %}
+      <div class="table-responsive">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>Reference ID</th>
+              <th>Permit Type</th>
+              <th>Destination</th>
+              <th>Departure Time</th>
+              <th>Return Time</th>
+              <th>Verification Code</th>
+              <th>Pass Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for o in approved_outpasses %}
+              <tr>
+                <td><code>{{ o.outpass_ref }}</code></td>
+                <td><span style="font-weight: 600; color: var(--dark-navy);">{{ o.leave_type }}</span></td>
+                <td>{{ o.destination }}</td>
+                <td>{{ o.departure_datetime.replace('T', ' ') }}</td>
+                <td>{{ o.expected_return_datetime.replace('T', ' ') }}</td>
+                <td><code style="background: #e0e7ff; color: #4338ca;">{{ o.verification_code }}</code></td>
+                <td><span class="badge badge-success">{{ o.status }}</span></td>
+                <td>
+                  <div style="display: flex; gap: 0.35rem;">
+                    <a href="{{ url_for('view_outpass', outpass_id=o.id) }}" class="btn btn-primary btn-sm">
+                      View Pass
+                    </a>
+                    <a href="{{ url_for('download_outpass_pdf', outpass_id=o.id) }}" class="btn btn-secondary btn-sm">
+                      PDF
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">🎫</div>
+        <h4>No Active Movement Passes</h4>
+        <p>You currently do not have any active or approved hostel movement outpasses.</p>
+        <div style="margin-top: 1rem;">
+          <a href="{{ url_for('leave_outing') }}" class="btn btn-primary btn-sm">Apply for One-Day Outing</a>
+          <a href="{{ url_for('leave_vacation') }}" class="btn btn-secondary btn-sm" style="margin-left: 0.5rem;">Apply for Vacation</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- PENDING & UNDER-REVIEW LEAVE APPLICATIONS -->
+<div class="content-card">
+  <div class="card-header-bar">
+    <div>
+      <h3>⏳ Applications Under Review by Warden</h3>
+      <p>Requests currently in the warden approval pipeline</p>
+    </div>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    {% if pending_requests %}
+      <div class="table-responsive">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>Submitted On</th>
+              <th>Leave Type</th>
+              <th>Destination</th>
+              <th>Departure - Return</th>
+              <th>Emergency Contact</th>
+              <th>Review Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in pending_requests %}
+              <tr>
+                <td>{{ p.created_at[:16] }}</td>
+                <td><b>{{ p.leave_type }}</b></td>
+                <td>{{ p.destination }}</td>
+                <td>{{ p.start_datetime.replace('T', ' ') }} to {{ p.return_datetime.replace('T', ' ') }}</td>
+                <td>{{ p.emergency_contact }}</td>
+                <td>
+                  <span class="badge badge-warning">Awaiting Warden Review</span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state" style="padding: 2rem 1rem;">
+        <div class="empty-state-icon" style="font-size: 2rem;">✅</div>
+        <h4>No Pending Applications</h4>
+        <p>All your leave and outpass applications have been processed.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

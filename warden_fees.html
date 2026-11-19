@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+{% block title %}Fee Administration{% endblock %}
+{% block page_title %}Hostel & Dhobi Fee Accounting Desk{% endblock %}
+
+{% block content %}
+<!-- RECORD PAYMENT MODAL TRIGGER & SEARCH -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  <!-- Record Verified Payment Form -->
+  <div class="content-card" style="margin-bottom: 0;">
+    <div class="card-header-bar">
+      <h3>💳 Record Verified Offline Payment</h3>
+    </div>
+    <div class="card-body">
+      <form action="{{ url_for('warden_fees') }}" method="POST">
+        <input type="hidden" name="action" value="record_payment">
+
+        <div class="form-group">
+          <label class="form-label" for="fee_type">Fee Account Category <span style="color:var(--danger)">*</span></label>
+          <select id="fee_type" name="fee_type" class="form-select" onchange="toggleFeeRecordList()" required>
+            <option value="hostel">Hostel Accommodation Fee</option>
+            <option value="dhobi">Dhobi / Laundry Monthly Service Fee</option>
+          </select>
+        </div>
+
+        <div class="form-group" id="hostelRecordGroup">
+          <label class="form-label" for="hostel_record_id">Select Student Hostel Account</label>
+          <select id="hostel_record_id" name="record_id" class="form-select">
+            {% for h in hostel_records %}
+              {% set bal = h.total_amount - h.amount_paid %}
+              <option value="{{ h.id }}" data-due="{{ bal }}">
+                {{ h.student_name }} ({{ h.hostel_block }}) — Due: ₹{{ bal | round(2) }} [{{ h.academic_term }}]
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group" id="dhobiRecordGroup" style="display: none;">
+          <label class="form-label" for="dhobi_record_id">Select Student Dhobi Account</label>
+          <select id="dhobi_record_id" class="form-select" disabled>
+            {% for d in dhobi_records %}
+              {% set bal = d.total_amount - d.amount_paid %}
+              <option value="{{ d.id }}" data-due="{{ bal }}">
+                {{ d.student_name }} ({{ d.hostel_block }}) — Due: ₹{{ bal | round(2) }} [{{ d.month_year }}]
+              </option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="amount">Payment Amount (INR) <span style="color:var(--danger)">*</span></label>
+            <input type="number" id="amount" name="amount" step="0.01" min="1" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="payment_method">Verification Method</label>
+            <select id="payment_method" name="payment_method" class="form-select">
+              <option value="Bank Transfer (NEFT/RTGS)">Bank Transfer (NEFT/RTGS)</option>
+              <option value="Cash Deposit (Office Receipt)">Cash Deposit (Office Receipt)</option>
+              <option value="College Counter Demand Draft">Demand Draft / Cheque</option>
+              <option value="Campus UPI Direct">Campus UPI Direct</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="notes">Verification Remarks / Reference Notes</label>
+          <input type="text" id="notes" name="notes" class="form-control"
+                 placeholder="e.g. Bank Challan #48291, confirmed by Accounts Branch">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          Record & Issue Receipt
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Accounting Guidelines Box -->
+  <div class="content-card" style="margin-bottom: 0;">
+    <div class="card-header-bar">
+      <h3>📑 Residential Accounting Rules</h3>
+    </div>
+    <div class="card-body" style="font-size: 0.88rem; color: var(--slate-text); line-height: 1.6;">
+      <ul style="padding-left: 1.25rem; display: grid; gap: 0.75rem;">
+        <li><b>Account Segregation:</b> Hostel accommodation and Dhobi fees are strictly tracked in independent ledgers.</li>
+        <li><b>Receipt Dispatch:</b> Recording a payment automatically issues an official digital receipt with an audit reference and alerts the student.</li>
+        <li><b>Partial Collections:</b> The ledger tracks cumulative payments until full balance clearance.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- HOSTEL ACCOMMODATION FEES LEDGER -->
+<div class="content-card">
+  <div class="card-header-bar">
+    <div>
+      <h3>🏛️ Master Hostel Fees Ledger</h3>
+      <p>Semester-wise room accommodation and amenities accounts</p>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="modern-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Term</th>
+            <th>Total Fee</th>
+            <th>Paid Amount</th>
+            <th>Balance Due</th>
+            <th>Due Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for h in hostel_records %}
+            {% set bal = h.total_amount - h.amount_paid %}
+            <tr>
+              <td>
+                <div style="font-weight: 700; color: var(--dark-navy);">{{ h.student_name }}</div>
+                <div style="font-size: 0.75rem; color: var(--muted-text);">{{ h.student_email }} · {{ h.hostel_block }} (Room {{ h.room_number or 'Unassigned' }})</div>
+              </td>
+              <td><b>{{ h.academic_term }}</b></td>
+              <td>₹ {{ h.total_amount | round(2) }}</td>
+              <td style="color: var(--success); font-weight: 600;">₹ {{ h.amount_paid | round(2) }}</td>
+              <td style="font-weight: 700; color: {{ 'var(--danger)' if bal > 0 else 'var(--muted-text)' }};">
+                ₹ {{ bal | round(2) }}
+              </td>
+              <td>{{ h.due_date }}</td>
+              <td>
+                <span class="badge badge-{{ 'success' if h.status == 'Paid' else 'warning' }}">
+                  {{ h.status }}
+                </span>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- DHOBI SERVICE FEES LEDGER -->
+<div class="content-card">
+  <div class="card-header-bar">
+    <div>
+      <h3>🧺 Master Dhobi Fees Ledger</h3>
+      <p>Monthly laundry service fee subscriptions</p>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="modern-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Billing Month</th>
+            <th>Billed Charge</th>
+            <th>Paid Amount</th>
+            <th>Balance Due</th>
+            <th>Due Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in dhobi_records %}
+            {% set bal = d.total_amount - d.amount_paid %}
+            <tr>
+              <td>
+                <div style="font-weight: 700; color: var(--dark-navy);">{{ d.student_name }}</div>
+                <div style="font-size: 0.75rem; color: var(--muted-text);">{{ d.student_email }} · {{ d.hostel_block }}</div>
+              </td>
+              <td><b>{{ d.month_year }}</b></td>
+              <td>₹ {{ d.total_amount | round(2) }}</td>
+              <td style="color: var(--success); font-weight: 600;">₹ {{ d.amount_paid | round(2) }}</td>
+              <td style="font-weight: 700; color: {{ 'var(--danger)' if bal > 0 else 'var(--muted-text)' }};">
+                ₹ {{ bal | round(2) }}
+              </td>
+              <td>{{ d.due_date }}</td>
+              <td>
+                <span class="badge badge-{{ 'success' if d.status == 'Paid' else 'warning' }}">
+                  {{ d.status }}
+                </span>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function toggleFeeRecordList() {
+  const feeType = document.getElementById('fee_type').value;
+  const hGroup = document.getElementById('hostelRecordGroup');
+  const dGroup = document.getElementById('dhobiRecordGroup');
+  const hSelect = document.getElementById('hostel_record_id');
+  const dSelect = document.getElementById('dhobi_record_id');
+
+  if (feeType === 'hostel') {
+    hGroup.style.display = 'block';
+    hSelect.disabled = false;
+    hSelect.name = 'record_id';
+    dGroup.style.display = 'none';
+    dSelect.disabled = true;
+    dSelect.name = '';
+  } else {
+    hGroup.style.display = 'none';
+    hSelect.disabled = true;
+    hSelect.name = '';
+    dGroup.style.display = 'block';
+    dSelect.disabled = false;
+    dSelect.name = 'record_id';
+  }
+}
+</script>
+{% endblock %}

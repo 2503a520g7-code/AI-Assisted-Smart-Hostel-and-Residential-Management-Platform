@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}Dhobi & Laundry{% endblock %}
+{% block page_title %}Hostel Laundry & Dhobi Services{% endblock %}
+
+{% block content %}
+<!-- SERVICE AVAILABILITY BANNER -->
+{% if schedules %}
+  {% set next_sched = schedules[0] %}
+  <div style="background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); color: white; border-radius: var(--radius-lg); padding: 1.5rem 2rem; margin-bottom: 2rem; box-shadow: var(--shadow-md);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div>
+        <span style="background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
+          Service Status: Active
+        </span>
+        <h2 style="font-size: 1.5rem; font-weight: 700; margin-top: 0.35rem;">
+          Next Scheduled Laundry Collection
+        </h2>
+        <p style="font-size: 0.9rem; opacity: 0.95; margin-top: 0.2rem;">
+          📅 <b>{{ next_sched.collection_date }}</b> from <b>{{ next_sched.collection_time_start }}</b> to <b>{{ next_sched.collection_time_end }}</b>
+          · Estimated Delivery: <b>{{ next_sched.expected_delivery_date }}</b> (Max {{ next_sched.max_clothes_per_student }} clothes)
+        </p>
+      </div>
+      <div>
+        <span class="badge" style="background: white; color: #0284c7; font-size: 0.9rem; padding: 8px 16px;">
+          ✓ Pickup Desk Open
+        </span>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius-lg); padding: 1.5rem 2rem; margin-bottom: 2rem;">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+      <div style="font-size: 2rem;">🧺</div>
+      <div>
+        <h3 style="font-size: 1.15rem; color: #92400e; font-weight: 700;">Schedule not announced yet.</h3>
+        <p style="font-size: 0.88rem; color: #b45309; margin-top: 0.25rem;">
+          The laundry management desk has not posted collection slots for the upcoming days. You will receive an in-app notification as soon as the next date is scheduled.
+        </p>
+      </div>
+    </div>
+  </div>
+{% endif %}
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+  <!-- Submit Laundry Bundle Request -->
+  <div class="content-card">
+    <div class="card-header-bar">
+      <h3>👕 Submit Laundry Bundle</h3>
+    </div>
+    <div class="card-body">
+      {% if schedules %}
+        <form action="{{ url_for('laundry') }}" method="POST">
+          <div class="form-group">
+            <label class="form-label" for="schedule_id">Select Collection Slot <span style="color:var(--danger)">*</span></label>
+            <select id="schedule_id" name="schedule_id" class="form-select" required>
+              {% for s in schedules %}
+                <option value="{{ s.id }}">
+                  {{ s.title }} — {{ s.collection_date }} ({{ s.collection_time_start }} - {{ s.collection_time_end }})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="cloth_count">Number of Clothes <span style="color:var(--danger)">*</span></label>
+              <input type="number" id="cloth_count" name="cloth_count" min="1" max="25" class="form-control"
+                     placeholder="e.g. 10 garments" required>
+              <div class="form-hint">Standard allowance: up to 15 garments per cycle.</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="service_category">Service Category <span style="color:var(--danger)">*</span></label>
+              <select id="service_category" name="service_category" class="form-select" required>
+                <option value="Regular Wash & Iron">Regular Wash & Iron</option>
+                <option value="Delicate Wash">Delicate Wash (Woolen / Silk)</option>
+                <option value="Dry Clean">Dry Clean</option>
+                <option value="Iron Only">Iron Only</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="notes">Special Garment Instructions / Notes</label>
+            <input type="text" id="notes" name="notes" class="form-control"
+                   placeholder="e.g. 2 shirts with starch, 1 white kurta">
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">
+            Submit Laundry Request
+          </button>
+        </form>
+      {% else %}
+        <div class="empty-state" style="padding: 2rem 1rem;">
+          <div class="empty-state-icon">⏸️</div>
+          <h4>Collection Currently Closed</h4>
+          <p>Please wait for the hostel administration to announce the next laundry pickup timetable.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Live Laundry Tracking & History -->
+  <div class="content-card">
+    <div class="card-header-bar">
+      <h3>📜 My Laundry Requests & Status</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      {% if requests_history %}
+        <div style="display: grid; gap: 1rem; padding: 1.25rem;">
+          {% for r in requests_history %}
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; background: #ffffff;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                  <span style="font-family: monospace; font-size: 0.8rem; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-weight: 700; color: var(--dark-navy);">
+                    {{ r.request_code }}
+                  </span>
+                  <span style="font-weight: 600; font-size: 0.88rem; margin-left: 6px;">
+                    {{ r.cloth_count }} Clothes
+                  </span>
+                  <span class="badge badge-primary" style="margin-left: 4px;">{{ r.service_category }}</span>
+                </div>
+                <div>
+                  {% if r.status == 'Delivered' %}
+                    <span class="badge badge-success">✓ Delivered</span>
+                  {% elif r.status == 'Ready for Delivery' %}
+                    <span class="badge badge-info">Ready for Pickup</span>
+                  {% elif r.status == 'Washing' %}
+                    <span class="badge badge-warning">Washing / Ironing</span>
+                  {% elif r.status == 'Collected' %}
+                    <span class="badge badge-primary">Collected</span>
+                  {% elif r.status == 'Cancelled' %}
+                    <span class="badge badge-danger">Cancelled</span>
+                  {% else %}
+                    <span class="badge badge-neutral">{{ r.status }}</span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div style="font-size: 0.8rem; color: var(--muted-text);">
+                {% if r.collection_date %}
+                  <b>Pickup Date:</b> {{ r.collection_date }} ({{ r.collection_time_start }}) · 
+                {% endif %}
+                <b>Submitted:</b> {{ r.created_at[:16] }}
+              </div>
+
+              {% if r.notes %}
+                <div style="font-size: 0.78rem; color: var(--slate-text); margin-top: 4px;">
+                  <b>Notes:</b> {{ r.notes }}
+                </div>
+              {% endif %}
+
+              <!-- Cancel option if eligible -->
+              {% if r.status in ['Request Submitted', 'Scheduled'] %}
+                <form action="{{ url_for('cancel_laundry', request_id=r.id) }}" method="POST" style="margin-top: 0.65rem;" onsubmit="return confirm('Cancel this laundry request?');">
+                  <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger); font-size: 0.75rem; padding: 2px 8px;">
+                    Cancel Request
+                  </button>
+                </form>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">🧺</div>
+          <h4>No Laundry Requests</h4>
+          <p>You haven't sent any laundry bundles yet. Select a slot on the left to submit clothes.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,364 @@
+{% extends "base.html" %}
+{% block title %}Student Dashboard{% endblock %}
+{% block page_title %}Student Overview{% endblock %}
+
+{% block content %}
+<!-- WELCOME BANNER -->
+<div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border-radius: var(--radius-lg); padding: 1.75rem 2rem; color: white; margin-bottom: 2rem; box-shadow: var(--shadow-md);">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <span style="background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
+        Resident Dashboard
+      </span>
+      <h2 style="font-size: 1.6rem; font-weight: 700; margin-top: 0.4rem;">
+        Welcome back, {{ student.name }}! 👋
+      </h2>
+      <p style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.2rem;">
+        {{ student.hostel_block }} · {{ student.academic_year }} · 
+        {% if student.room_number %}
+          Room <b>{{ student.room_number }}</b>{% if student.floor %} (Floor {{ student.floor }}){% endif %}
+        {% else %}
+          <span style="background: rgba(239,68,68,0.3); padding: 2px 6px; border-radius: 4px;">Room not yet allocated</span>
+        {% endif %}
+      </p>
+    </div>
+    <div>
+      <a href="{{ url_for('emergency_support') }}" class="btn btn-danger" style="background:#ffffff; color:#dc2626; font-weight:700; border:none; box-shadow:0 4px 10px rgba(0,0,0,0.15);">
+        🚨 Emergency Help
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- REGISTERED STUDENT PROFILE DETAILS CARD -->
+<div class="content-card" style="margin-bottom: 2rem;">
+  <div class="card-header-bar">
+    <div>
+      <h3 style="display: flex; align-items: center; gap: 0.5rem;">
+        <span>📋</span> My Registered Student Profile
+      </h3>
+      <p>Official student records retrieved from the AIAC residential database</p>
+    </div>
+    <a href="{{ url_for('profile') }}" class="btn btn-secondary btn-sm">
+      ✏️ View & Edit Full Profile
+    </a>
+  </div>
+  <div class="card-body" style="padding: 1.25rem 1.5rem;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+      <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem;">
+        <div style="font-size: 0.75rem; font-weight: 600; color: var(--muted-text); text-transform: uppercase;">Student Name</div>
+        <div style="font-size: 1rem; font-weight: 700; color: var(--dark-navy); margin-top: 0.25rem;">{{ student.name }}</div>
+      </div>
+      <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem;">
+        <div style="font-size: 0.75rem; font-weight: 600; color: var(--muted-text); text-transform: uppercase;">College Email</div>
+        <div style="font-size: 0.95rem; font-weight: 600; color: var(--primary); margin-top: 0.25rem; word-break: break-all;">{{ student.email }}</div>
+      </div>
+      <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem;">
+        <div style="font-size: 0.75rem; font-weight: 600; color: var(--muted-text); text-transform: uppercase;">Student ID / Roll No</div>
+        <div style="font-size: 1rem; font-weight: 700; color: var(--dark-navy); margin-top: 0.25rem;">
+          {{ student.student_id if student.student_id else 'Not Assigned' }}
+        </div>
+      </div>
+      <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem;">
+        <div style="font-size: 0.75rem; font-weight: 600; color: var(--muted-text); text-transform: uppercase;">Department</div>
+        <div style="font-size: 0.95rem; font-weight: 600; color: var(--dark-navy); margin-top: 0.25rem;">
+          {{ student.department if student.department else 'General Engineering' }}
+        </div>
+      </div>
+      <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem;">
+        <div style="font-size: 0.75rem; font-weight: 600; color: var(--muted-text); text-transform: uppercase;">Hostel Block</div>
+        <div style="font-size: 1rem; font-weight: 700; color: var(--dark-navy); margin-top: 0.25rem;">
+          {{ student.hostel_block or student.block_name or 'Block A' }}
+        </div>
+      </div>
+      <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem;">
+        <div style="font-size: 0.75rem; font-weight: 600; color: var(--muted-text); text-transform: uppercase;">Room Number</div>
+        <div style="font-size: 1rem; font-weight: 700; margin-top: 0.25rem;">
+          {% if student.room_number %}
+            <span style="color: var(--primary);">Room {{ student.room_number }}</span>
+          {% else %}
+            <span style="color: var(--danger); font-size: 0.9rem;">Room not yet allocated</span>
+          {% endif %}
+        </div>
+      </div>
+      <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem;">
+        <div style="font-size: 0.75rem; font-weight: 600; color: var(--muted-text); text-transform: uppercase;">Academic Year</div>
+        <div style="font-size: 0.95rem; font-weight: 600; color: var(--dark-navy); margin-top: 0.25rem;">
+          {{ student.academic_year or '1st Year' }}
+        </div>
+      </div>
+      <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1rem;">
+        <div style="font-size: 0.75rem; font-weight: 600; color: var(--muted-text); text-transform: uppercase;">Phone Number</div>
+        <div style="font-size: 0.95rem; font-weight: 600; color: var(--dark-navy); margin-top: 0.25rem;">
+          {{ student.phone if student.phone else 'Not Provided' }}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- METRIC STATUS CARDS -->
+<div class="metrics-grid">
+  <!-- Room Allocation -->
+  <div class="metric-card">
+    <div class="metric-info">
+      <div class="label">Assigned Room</div>
+      <div class="value" style="font-size: 1.35rem;">
+        {% if student.room_number %}
+          Room {{ student.room_number }}
+        {% else %}
+          <span style="font-size: 0.95rem; color: var(--danger);">Unassigned</span>
+        {% endif %}
+      </div>
+      <div class="sub-text">{{ student.hostel_block }}</div>
+    </div>
+    <div class="metric-icon-wrap indigo">🛏️</div>
+  </div>
+
+  <!-- Pending Leave -->
+  <div class="metric-card">
+    <div class="metric-info">
+      <div class="label">Pending Outpasses</div>
+      <div class="value">{{ pending_leaves | length }}</div>
+      <div class="sub-text">Awaiting warden review</div>
+    </div>
+    <div class="metric-icon-wrap amber">📋</div>
+  </div>
+
+  <!-- Unresolved Complaints -->
+  <div class="metric-card">
+    <div class="metric-info">
+      <div class="label">Active Complaints</div>
+      <div class="value">{{ active_complaints | length }}</div>
+      <div class="sub-text">Under investigation</div>
+    </div>
+    <div class="metric-icon-wrap rose">🛠️</div>
+  </div>
+
+  <!-- Active Laundry -->
+  <div class="metric-card">
+    <div class="metric-info">
+      <div class="label">Active Laundry</div>
+      <div class="value">{{ active_laundry | length }}</div>
+      <div class="sub-text">In process / scheduled</div>
+    </div>
+    <div class="metric-icon-wrap purple">🧺</div>
+  </div>
+
+  <!-- Hostel Fee Balance -->
+  <div class="metric-card">
+    <div class="metric-info">
+      <div class="label">Hostel Fee Due</div>
+      <div class="value" style="font-size: 1.3rem;">
+        {% if hostel_fee %}
+          ₹ {{ (hostel_fee.total_amount - hostel_fee.amount_paid) | round(2) }}
+        {% else %}
+          ₹ 0
+        {% endif %}
+      </div>
+      <div class="sub-text">
+        Status: <span class="badge badge-{{ 'success' if hostel_fee and hostel_fee.status == 'Paid' else 'warning' }}">
+          {{ hostel_fee.status if hostel_fee else 'N/A' }}
+        </span>
+      </div>
+    </div>
+    <div class="metric-icon-wrap emerald">💳</div>
+  </div>
+
+  <!-- Dhobi Fee Balance -->
+  <div class="metric-card">
+    <div class="metric-info">
+      <div class="label">Dhobi Fee Due</div>
+      <div class="value" style="font-size: 1.3rem;">
+        {% if dhobi_fee %}
+          ₹ {{ (dhobi_fee.total_amount - dhobi_fee.amount_paid) | round(2) }}
+        {% else %}
+          ₹ 0
+        {% endif %}
+      </div>
+      <div class="sub-text">
+        Status: <span class="badge badge-{{ 'success' if dhobi_fee and dhobi_fee.status == 'Paid' else 'warning' }}">
+          {{ dhobi_fee.status if dhobi_fee else 'N/A' }}
+        </span>
+      </div>
+    </div>
+    <div class="metric-icon-wrap sky">👕</div>
+  </div>
+</div>
+
+<!-- QUICK ACTION SECTION -->
+<div class="content-card">
+  <div class="card-header-bar">
+    <div>
+      <h3>⚡ Quick Residential Actions</h3>
+      <p>Direct shortcuts to manage your daily hostel activities</p>
+    </div>
+  </div>
+  <div class="card-body">
+    <div class="quick-actions-grid">
+      <a href="{{ url_for('profile') }}" class="quick-action-pill">
+        <span class="icon">👤</span>
+        <span>My Profile</span>
+      </a>
+      <a href="{{ url_for('room_details') }}" class="quick-action-pill">
+        <span class="icon">🛏️</span>
+        <span>My Room Details</span>
+      </a>
+      <a href="{{ url_for('leave_management') }}" class="quick-action-pill">
+        <span class="icon">📝</span>
+        <span>Leave Management</span>
+      </a>
+      <a href="{{ url_for('leave_outing') }}" class="quick-action-pill">
+        <span class="icon">🚶</span>
+        <span>One-Day Outing</span>
+      </a>
+      <a href="{{ url_for('leave_vacation') }}" class="quick-action-pill">
+        <span class="icon">🧳</span>
+        <span>Vacation Request (10 Days)</span>
+      </a>
+      <a href="{{ url_for('outpass_status') }}" class="quick-action-pill">
+        <span class="icon">🎫</span>
+        <span>Outpass Status</span>
+      </a>
+      <a href="{{ url_for('complaints') }}" class="quick-action-pill">
+        <span class="icon">🛠️</span>
+        <span>Complaints</span>
+      </a>
+      <a href="{{ url_for('emergency_support') }}" class="quick-action-pill" style="border-color: #fecaca; color: #dc2626; background: #fff5f5;">
+        <span class="icon">🚨</span>
+        <span>Emergency Contact to Warden</span>
+      </a>
+      <a href="{{ url_for('mess_menu') }}" class="quick-action-pill">
+        <span class="icon">🍽️</span>
+        <span>Mess Menu</span>
+      </a>
+      <a href="{{ url_for('hostel_fees') }}" class="quick-action-pill">
+        <span class="icon">💳</span>
+        <span>Hostel Fee Details</span>
+      </a>
+      <a href="{{ url_for('dhobi_fees') }}" class="quick-action-pill">
+        <span class="icon">🧺</span>
+        <span>Dhobi Fee Details</span>
+      </a>
+      <a href="{{ url_for('laundry') }}" class="quick-action-pill">
+        <span class="icon">👕</span>
+        <span>Washing Availability</span>
+      </a>
+      <a href="{{ url_for('holiday_calendar') }}" class="quick-action-pill">
+        <span class="icon">📅</span>
+        <span>Holiday Calendar</span>
+      </a>
+      <a href="{{ url_for('settings') }}" class="quick-action-pill">
+        <span class="icon">⚙️</span>
+        <span>Settings</span>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- TWO-COLUMN LAYOUT: APPROVED OUTPASSES & NOTIFICATIONS -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+  <!-- Approved Outpasses -->
+  <div class="content-card">
+    <div class="card-header-bar">
+      <h3>🎫 Recent Approved Outpasses</h3>
+      <a href="{{ url_for('leave_management') }}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      {% if approved_outpasses %}
+        <div class="table-responsive">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>Reference</th>
+                <th>Destination</th>
+                <th>Departure</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for o in approved_outpasses %}
+                <tr>
+                  <td><code>{{ o.outpass_ref }}</code></td>
+                  <td>{{ o.destination }}</td>
+                  <td>{{ o.departure_datetime }}</td>
+                  <td>
+                    <a href="{{ url_for('view_outpass', outpass_id=o.id) }}" class="btn btn-primary btn-sm">
+                      View Pass
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">🎫</div>
+          <h4>No Active Outpasses</h4>
+          <p>You currently do not have any approved movement outpasses.</p>
+          <a href="{{ url_for('leave_management') }}" class="btn btn-primary btn-sm">Apply for Leave</a>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent Notifications -->
+  <div class="content-card">
+    <div class="card-header-bar">
+      <h3>🔔 Recent Notifications</h3>
+      <a href="{{ url_for('notifications') }}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="card-body" style="padding: 1rem 1.5rem;">
+      {% if notifications %}
+        {% for n in notifications %}
+          <div style="padding: 0.75rem 0; border-bottom: 1px solid var(--border); display: flex; gap: 0.75rem;">
+            <div style="font-size: 1.2rem;">
+              {% if n.type == 'leave' %}📋
+              {% elif n.type == 'outpass' %}🎫
+              {% elif n.type == 'emergency' %}🚨
+              {% elif n.type == 'complaint' %}🛠️
+              {% elif n.type == 'fee' %}💳
+              {% elif n.type == 'laundry' %}🧺
+              {% else %}📢{% endif %}
+            </div>
+            <div style="flex: 1;">
+              <div style="font-weight: 600; font-size: 0.88rem; color: var(--dark-navy);">{{ n.title }}</div>
+              <div style="font-size: 0.8rem; color: var(--muted-text); margin-top: 2px;">{{ n.message }}</div>
+              <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 3px;">{{ n.created_at[:16] }}</div>
+            </div>
+          </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">🔔</div>
+          <h4>No New Notifications</h4>
+          <p>You are all caught up on all hostel alerts and announcements.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- ANNOUNCEMENTS FROM WARDEN -->
+{% if announcements %}
+<div class="content-card">
+  <div class="card-header-bar">
+    <h3>📢 Official Hostel Announcements</h3>
+  </div>
+  <div class="card-body">
+    <div style="display: grid; gap: 1rem;">
+      {% for a in announcements %}
+        <div style="background: #f8fafc; border-left: 4px solid var(--primary); padding: 1rem 1.25rem; border-radius: var(--radius-sm);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+            <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--dark-navy);">{{ a.title }}</h4>
+            <span style="font-size: 0.75rem; color: var(--muted-text);">{{ a.created_at[:10] }}</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--slate-text);">{{ a.content }}</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

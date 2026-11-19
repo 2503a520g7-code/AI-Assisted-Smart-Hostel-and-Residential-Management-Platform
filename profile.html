@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% block title %}My Profile{% endblock %}
+{% block page_title %}Resident Profile{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem;">
+  <!-- Profile Overview Card -->
+  <div class="content-card">
+    <div class="card-header-bar">
+      <h3>👤 Account Details</h3>
+      <span class="badge badge-success">{{ student.status | capitalize }}</span>
+    </div>
+    <div class="card-body">
+      <div style="display: flex; align-items: center; gap: 1.25rem; margin-bottom: 1.5rem;">
+        <div class="avatar-circle" style="width: 68px; height: 68px; font-size: 1.6rem;">
+          {{ student.name[0] | upper }}
+        </div>
+        <div>
+          <h3 style="font-size: 1.25rem; color: var(--dark-navy); margin-bottom: 0.2rem;">{{ student.name }}</h3>
+          <p style="font-size: 0.85rem; color: var(--muted-text);">{{ student.email }}</p>
+          <div style="display: flex; gap: 0.5rem; margin-top: 6px; flex-wrap: wrap;">
+            <span class="badge badge-primary">{{ student.role | capitalize }}</span>
+            {% if student.department %}
+              <span class="badge badge-secondary">{{ student.department }}</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; gap: 0.85rem; border-top: 1px solid var(--border); padding-top: 1.25rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--muted-text); font-size: 0.88rem;">Full Name:</span>
+          <span style="font-weight: 600; color: var(--dark-navy); font-size: 0.88rem;">{{ student.name }}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--muted-text); font-size: 0.88rem;">College Email:</span>
+          <span style="font-weight: 600; color: var(--primary); font-size: 0.88rem;">{{ student.email }}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--muted-text); font-size: 0.88rem;">Student ID / Roll No:</span>
+          <span style="font-weight: 600; color: var(--dark-navy); font-size: 0.88rem;">
+            {{ student.student_id or 'Not provided' }}
+          </span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--muted-text); font-size: 0.88rem;">Academic Year:</span>
+          <span style="font-weight: 600; color: var(--dark-navy); font-size: 0.88rem;">{{ student.academic_year }}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--muted-text); font-size: 0.88rem;">Department / Major:</span>
+          <span style="font-weight: 600; color: var(--dark-navy); font-size: 0.88rem;">
+            {{ student.department or 'Not provided' }}
+          </span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--muted-text); font-size: 0.88rem;">Hostel Block:</span>
+          <span style="font-weight: 600; color: var(--dark-navy); font-size: 0.88rem;">{{ student.hostel_block }}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--muted-text); font-size: 0.88rem;">Room Number:</span>
+          <span style="font-weight: 600; font-size: 0.88rem;">
+            {% if student.room_number %}
+              <span class="badge badge-primary">Room {{ student.room_number }} (Floor {{ student.floor }})</span>
+            {% else %}
+              <span class="badge badge-warning">Room Not Yet Allocated</span>
+            {% endif %}
+          </span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--muted-text); font-size: 0.88rem;">Room Allocation Status:</span>
+          <span style="font-weight: 600; font-size: 0.88rem;">
+            {% if student.room_number %}
+              <span class="badge badge-success">Allocated & Confirmed</span>
+            {% else %}
+              <span class="badge badge-warning">Pending Warden Assignment</span>
+            {% endif %}
+          </span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--muted-text); font-size: 0.88rem;">Contact Phone:</span>
+          <span style="font-weight: 600; color: var(--dark-navy); font-size: 0.88rem;">{{ student.phone or 'Not provided' }}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--muted-text); font-size: 0.88rem;">Guardian Contact:</span>
+          <span style="font-weight: 600; color: var(--dark-navy); font-size: 0.88rem;">
+            {% if student.guardian_phone %}
+              {{ student.guardian_name or 'Guardian' }}: {{ student.guardian_phone }}
+            {% else %}
+              Not provided
+            {% endif %}
+          </span>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="color: var(--muted-text); font-size: 0.88rem;">Registered On:</span>
+          <span style="font-weight: 600; color: var(--dark-navy); font-size: 0.88rem;">{{ student.created_at[:10] }}</span>
+        </div>
+      </div>
+
+      <div style="background: #f8fafc; border-radius: 8px; padding: 0.85rem; margin-top: 1.5rem; font-size: 0.78rem; color: #64748b;">
+        ℹ️ <b>Policy Notice:</b> Room allocations, fee records, outpasses, and roles are managed strictly by the Chief Warden and cannot be altered by students. Contact details and department can be updated below.
+      </div>
+    </div>
+  </div>
+
+  <!-- Editable Profile & Password Section -->
+  <div>
+    <!-- Update Contact & Profile Information -->
+    <div class="content-card">
+      <div class="card-header-bar">
+        <h3>📱 Update Profile & Contact Information</h3>
+      </div>
+      <div class="card-body">
+        <form action="{{ url_for('profile') }}" method="POST">
+          <input type="hidden" name="action" value="update_info">
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="phone">Personal Mobile / WhatsApp</label>
+              <input type="tel" id="phone" name="phone" class="form-control"
+                     value="{{ student.phone or '' }}" placeholder="+91 98765 43210" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="student_id">Student ID / Roll No</label>
+              <input type="text" id="student_id" name="student_id" class="form-control"
+                     value="{{ student.student_id or '' }}" placeholder="e.g. 2024-CS-0842">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="department">Academic Department / Major</label>
+            <input type="text" id="department" name="department" class="form-control"
+                   value="{{ student.department or '' }}" placeholder="e.g. Computer Science & Engineering">
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="guardian_name">Parent / Guardian Name</label>
+              <input type="text" id="guardian_name" name="guardian_name" class="form-control"
+                     value="{{ student.guardian_name or '' }}" placeholder="e.g. Suresh Patel">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="guardian_phone">Parent / Guardian Phone</label>
+              <input type="tel" id="guardian_phone" name="guardian_phone" class="form-control"
+                     value="{{ student.guardian_phone or '' }}" placeholder="+91 98765 99999">
+            </div>
+          </div>
+
+          <div class="form-hint" style="margin-bottom: 1rem;">
+            Emergency contacts and guardian phones are required for verification when applying for overnight and vacation outpasses.
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-sm">Save Profile Details</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Change Password -->
+    <div class="content-card">
+      <div class="card-header-bar">
+        <h3>🔒 Security & Password</h3>
+      </div>
+      <div class="card-body">
+        <form action="{{ url_for('profile') }}" method="POST">
+          <input type="hidden" name="action" value="change_password">
+          <div class="form-group">
+            <label class="form-label" for="current_password">Current Password</label>
+            <input type="password" id="current_password" name="current_password" class="form-control" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="new_password">New Password</label>
+              <input type="password" id="new_password" name="new_password" class="form-control"
+                     placeholder="Min. 8 characters" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="confirm_password">Confirm New Password</label>
+              <input type="password" id="confirm_password" name="confirm_password" class="form-control" required>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-secondary btn-sm">Update Password</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

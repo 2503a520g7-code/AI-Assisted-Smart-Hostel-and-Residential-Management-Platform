@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}Emergency Support{% endblock %}
+{% block page_title %}Hostel Emergency Desk{% endblock %}
+
+{% block content %}
+<!-- CRITICAL EMERGENCY WARNING BANNER -->
+<div style="background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%); color: white; border-radius: var(--radius-lg); padding: 1.5rem 2rem; margin-bottom: 2rem; box-shadow: 0 8px 20px rgba(220, 38, 38, 0.25);">
+  <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+    <div style="font-size: 2.5rem;">🚨</div>
+    <div style="flex: 1;">
+      <h3 style="font-size: 1.35rem; font-weight: 800;">Campus 24/7 Emergency Support</h3>
+      <p style="font-size: 0.88rem; opacity: 0.95; margin-top: 0.25rem;">
+        If you or another resident is in immediate physical, medical, or fire danger, trigger the alert below and dial the on-call emergency numbers immediately.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- HELPLINE DIRECTORY -->
+<div class="metrics-grid" style="margin-bottom: 2rem;">
+  <div class="metric-card" style="border-left: 4px solid var(--danger);">
+    <div class="metric-info">
+      <div class="label">Medical & Ambulance</div>
+      <div class="value" style="font-size: 1.15rem; color: var(--danger);">{{ contacts.medical }}</div>
+      <div class="sub-text">24/7 Campus Health Center</div>
+    </div>
+    <div class="metric-icon-wrap rose">🚑</div>
+  </div>
+
+  <div class="metric-card" style="border-left: 4px solid var(--primary);">
+    <div class="metric-info">
+      <div class="label">Chief Security Desk</div>
+      <div class="value" style="font-size: 1.15rem; color: var(--primary);">{{ contacts.security }}</div>
+      <div class="sub-text">Hostel Main Gate & Night Patrol</div>
+    </div>
+    <div class="metric-icon-wrap indigo">🛡️</div>
+  </div>
+
+  <div class="metric-card" style="border-left: 4px solid var(--purple-accent);">
+    <div class="metric-info">
+      <div class="label">Chief Warden Hotline</div>
+      <div class="value" style="font-size: 1.15rem; color: var(--purple-accent);">{{ contacts.warden }}</div>
+      <div class="sub-text">Hostel Administration Office</div>
+    </div>
+    <div class="metric-icon-wrap purple">📞</div>
+  </div>
+
+  <div class="metric-card" style="border-left: 4px solid var(--warning);">
+    <div class="metric-info">
+      <div class="label">Emergency Electrician</div>
+      <div class="value" style="font-size: 1.15rem; color: var(--warning);">{{ contacts.electrician }}</div>
+      <div class="sub-text">Power Outage & Fire Safety</div>
+    </div>
+    <div class="metric-icon-wrap amber">⚡</div>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+  <!-- Emergency Alert Submission Form -->
+  <div class="content-card">
+    <div class="card-header-bar" style="background: #fef2f2; border-bottom: 1px solid #fecaca;">
+      <h3 style="color: #991b1b;">
+        <span>🚨</span> Broadcast Immediate Emergency Alert
+      </h3>
+    </div>
+    <div class="card-body">
+      <form action="{{ url_for('emergency_support') }}" method="POST">
+        <div class="form-group">
+          <label class="form-label" for="category">Emergency Category <span style="color:var(--danger)">*</span></label>
+          <select id="category" name="category" class="form-select" required>
+            <option value="Medical Emergency">Medical Emergency (Severe illness, injury, fainting)</option>
+            <option value="Fire Hazard">Fire Hazard (Smoke, active flame, burning odor)</option>
+            <option value="Security Problem">Security Problem (Intruder, theft, trespass)</option>
+            <option value="Harassment / Safety">Harassment or Safety Concern (Immediate threat)</option>
+            <option value="Electrical Hazard">Electrical Hazard (Sparking, live wire, short circuit)</option>
+            <option value="Water Leakage">Severe Water Leakage / Room Flooding</option>
+            <option value="Other Urgent">Other Urgent Hostel Emergency</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="location_or_room">Exact Location / Room <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="location_or_room" name="location_or_room" class="form-control"
+                   placeholder="e.g. Block A, Room 204 or 2nd floor staircase" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="priority">Priority Level <span style="color:var(--danger)">*</span></label>
+            <select id="priority" name="priority" class="form-select" required>
+              <option value="Critical">Critical (Immediate danger to life/property)</option>
+              <option value="High">High (Urgent action needed within minutes)</option>
+              <option value="Medium">Medium (Urgent facility problem)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="description">Detailed Situation Description <span style="color:var(--danger)">*</span></label>
+          <textarea id="description" name="description" rows="3" class="form-control"
+                    placeholder="Describe what is occurring, who is affected, and immediate assistance needed..." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="contact_number">Your Callback Phone</label>
+          <input type="tel" id="contact_number" name="contact_number" class="form-control"
+                 placeholder="+91 98765 00000" value="{{ current_user.phone or '' }}">
+        </div>
+
+        <!-- Honest Service Disclosure -->
+        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1.25rem; font-size: 0.8rem; color: #92400e;">
+          ⚠️ <b>Operational Notice:</b> This alert is stored immediately in the system database and displayed prominently at the Warden Emergency Desk. Wardens on duty monitor this dashboard. For life-threatening emergencies, also dial the medical hotline directly.
+        </div>
+
+        <button type="submit" class="btn btn-danger btn-block" style="padding: 0.85rem; font-size: 1rem; font-weight: 700; letter-spacing: 0.02em;">
+          🚨 DISPATCH EMERGENCY ALERT NOW
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Emergency Alerts History -->
+  <div class="content-card">
+    <div class="card-header-bar">
+      <h3>📜 My Reported Emergency Alerts</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      {% if alerts %}
+        <div class="table-responsive">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>Category & Location</th>
+                <th>Priority</th>
+                <th>Status</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in alerts %}
+                <tr>
+                  <td>
+                    <div style="font-weight: 700; color: var(--danger);">{{ a.category }}</div>
+                    <div style="font-size: 0.8rem; color: var(--dark-navy);">📍 {{ a.location_or_room }}</div>
+                    <div style="font-size: 0.75rem; color: var(--muted-text); margin-top: 2px;">{{ a.description }}</div>
+                    {% if a.resolution_notes %}
+                      <div style="font-size: 0.74rem; color: #059669; margin-top: 4px;">
+                        <b>Response:</b> {{ a.resolution_notes }}
+                      </div>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <span class="badge badge-{{ 'danger' if a.priority == 'Critical' else 'warning' }}">
+                      {{ a.priority }}
+                    </span>
+                  </td>
+                  <td>
+                    {% if a.status == 'New' %}
+                      <span class="badge badge-danger">New (Unresolved)</span>
+                    {% elif a.status == 'Acknowledged' %}
+                      <span class="badge badge-warning">Acknowledged</span>
+                    {% elif a.status == 'In Progress' %}
+                      <span class="badge badge-info">In Progress</span>
+                    {% elif a.status == 'Resolved' %}
+                      <span class="badge badge-success">Resolved</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <div style="font-size: 0.75rem; color: var(--muted-text);">
+                      {{ a.created_at[:16] }}
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon" style="color: #22c55e;">🛡️</div>
+          <h4>No Emergencies Reported</h4>
+          <p>You have not logged any emergency situations. Campus operations are safe.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

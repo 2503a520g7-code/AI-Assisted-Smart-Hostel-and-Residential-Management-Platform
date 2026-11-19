@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}Vacation Request (Up to 10 Days){% endblock %}
+{% block page_title %}Vacation Request (Up to 10 Days){% endblock %}
+
+{% block content %}
+<!-- LEAVE MODULE NAVIGATION TABS -->
+<div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+  <a href="{{ url_for('leave_outing') }}" class="btn btn-secondary btn-sm">
+    🚶 One-Day Outing
+  </a>
+  <a href="{{ url_for('leave_vacation') }}" class="btn btn-primary btn-sm">
+    🧳 Vacation Request (10 Days)
+  </a>
+  <a href="{{ url_for('leave_management') }}" class="btn btn-secondary btn-sm">
+    📝 General Leave Desk
+  </a>
+  <a href="{{ url_for('outpass_status') }}" class="btn btn-secondary btn-sm">
+    🎫 Outpass Status
+  </a>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+  <!-- Vacation Request Application Form -->
+  <div class="content-card">
+    <div class="card-header-bar">
+      <div>
+        <h3>🧳 Apply for Vacation Leave (Max 10 Days)</h3>
+        <p>Semester breaks, festival vacations, and extended visits to home</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <form action="{{ url_for('leave_vacation') }}" method="POST">
+        <input type="hidden" name="leave_type" value="Vacation leave (up to 10 days)">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="start_datetime">Departure Date & Time <span style="color:var(--danger)">*</span></label>
+            <input type="datetime-local" id="start_datetime" name="start_datetime" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="return_datetime">Expected Return Date & Time <span style="color:var(--danger)">*</span></label>
+            <input type="datetime-local" id="return_datetime" name="return_datetime" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="destination">Home / Vacation Destination Address <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="destination" name="destination" class="form-control"
+                 placeholder="e.g. 142 Green Avenue, Indiranagar, Bangalore" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reason">Reason for Vacation <span style="color:var(--danger)">*</span></label>
+          <textarea id="reason" name="reason" rows="2" class="form-control"
+                    placeholder="e.g. Festival celebration with family / Semester break recess" required></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="parent_phone">Parent / Guardian Contact Phone <span style="color:var(--danger)">*</span></label>
+            <input type="tel" id="parent_phone" name="parent_phone" class="form-control"
+                   value="{{ student.guardian_phone or '' }}" placeholder="+91 98765 11111" required>
+            <div class="form-hint">Hostel administration may verify parent consent before approval.</div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="emergency_contact">Student Mobile Number <span style="color:var(--danger)">*</span></label>
+            <input type="tel" id="emergency_contact" name="emergency_contact" class="form-control"
+                   value="{{ student.phone or '' }}" placeholder="+91 98765 00000" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="additional_notes">Travel Mode & Additional Notes</label>
+          <input type="text" id="additional_notes" name="additional_notes" class="form-control"
+                 placeholder="e.g. Traveling via Flight / Train 12627 (Karnataka Express)">
+        </div>
+
+        <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1.25rem; font-size: 0.82rem; color: #92400e;">
+          ⚠️ <b>10-Day Policy Limit:</b> Portal vacation permits are strictly limited to a maximum duration of <b>10 consecutive days</b>. Applications exceeding 10 days will be rejected and require special approval from the Chief Warden.
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          Submit Vacation Request (Up to 10 Days)
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Vacation History -->
+  <div class="content-card">
+    <div class="card-header-bar">
+      <h3>📜 My Vacation Records</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      {% if vacations %}
+        <div class="table-responsive">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>Destination</th>
+                <th>Dates & Duration</th>
+                <th>Status</th>
+                <th>Outpass</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for v in vacations %}
+                <tr>
+                  <td>
+                    <div style="font-weight: 600; color: var(--dark-navy);">{{ v.destination }}</div>
+                    <div style="font-size: 0.78rem; color: var(--muted-text);">{{ v.reason }}</div>
+                  </td>
+                  <td>
+                    <div style="font-size: 0.82rem;">{{ v.start_datetime.replace('T', ' ') }}</div>
+                    <div style="font-size: 0.76rem; color: var(--muted-text);">Return: {{ v.return_datetime.replace('T', ' ') }}</div>
+                  </td>
+                  <td>
+                    <span class="badge badge-{{ 'success' if v.status == 'Approved' else ('danger' if v.status == 'Rejected' else 'warning') }}">
+                      {{ v.status }}
+                    </span>
+                  </td>
+                  <td>
+                    {% if v.status == 'Approved' and v.outpass_id %}
+                      <a href="{{ url_for('view_outpass', outpass_id=v.outpass_id) }}" class="btn btn-primary btn-sm">
+                        View Outpass
+                      </a>
+                    {% elif v.status == 'Pending' %}
+                      <span style="font-size: 0.78rem; color: var(--muted-text);">Awaiting Warden</span>
+                    {% else %}
+                      <span style="font-size: 0.78rem; color: var(--danger);">{{ v.decision_note or 'Rejected' }}</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">🧳</div>
+          <h4>No Vacation Records</h4>
+          <p>You have not submitted any vacation leave requests yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

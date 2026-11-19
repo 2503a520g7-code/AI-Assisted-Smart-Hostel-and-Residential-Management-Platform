@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}Laundry Operations{% endblock %}
+{% block page_title %}Hostel Laundry & Dhobi Management{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  <!-- Create New Collection Schedule -->
+  <div class="content-card" style="margin-bottom: 0;">
+    <div class="card-header-bar">
+      <h3>🧺 Schedule Collection Drive</h3>
+    </div>
+    <div class="card-body">
+      <form action="{{ url_for('warden_laundry') }}" method="POST">
+        <input type="hidden" name="action" value="add_schedule">
+
+        <div class="form-group">
+          <label class="form-label" for="title">Schedule Title <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="title" name="title" class="form-control"
+                 placeholder="e.g. Midweek Regular Laundry Pickup" required>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="collection_date">Collection Date <span style="color:var(--danger)">*</span></label>
+            <input type="date" id="collection_date" name="collection_date" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="expected_delivery_date">Delivery Date <span style="color:var(--danger)">*</span></label>
+            <input type="date" id="expected_delivery_date" name="expected_delivery_date" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="collection_time_start">Start Time</label>
+            <input type="text" id="collection_time_start" name="collection_time_start" class="form-control"
+                   value="08:00 AM" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="collection_time_end">End Time</label>
+            <input type="text" id="collection_time_end" name="collection_time_end" class="form-control"
+                   value="11:30 AM" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="max_clothes">Max Clothes</label>
+            <input type="number" id="max_clothes" name="max_clothes" value="15" min="5" max="30" class="form-control" required>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          Publish Schedule & Notify Residents
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Active Collection Timetables -->
+  <div class="content-card" style="margin-bottom: 0;">
+    <div class="card-header-bar">
+      <h3>📅 Published Pickup Timetables</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      {% if schedules %}
+        <div style="display: grid; gap: 0.75rem; padding: 1rem;">
+          {% for s in schedules %}
+            <div style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.85rem; background: #ffffff;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                <h4 style="font-size: 0.92rem; font-weight: 700; color: var(--dark-navy);">{{ s.title }}</h4>
+                <span class="badge badge-{{ 'success' if s.is_available else 'danger' }}">
+                  {{ 'Available' if s.is_available else 'Cancelled' }}
+                </span>
+              </div>
+              <div style="font-size: 0.8rem; color: var(--slate-text);">
+                📅 <b>Pickup:</b> {{ s.collection_date }} ({{ s.collection_time_start }} - {{ s.collection_time_end }}) · 
+                🚚 <b>Delivery:</b> {{ s.expected_delivery_date }}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">📅</div>
+          <h4>No Schedules Announced</h4>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- STUDENT LAUNDRY REQUESTS TABLE -->
+<div class="content-card">
+  <div class="card-header-bar">
+    <div>
+      <h3>👕 Student Laundry Requests & Workflow</h3>
+      <p>Update batches as garments move from collection to wash, iron, and delivery</p>
+    </div>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    {% if requests %}
+      <div class="table-responsive">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>Tracking Ref</th>
+              <th>Student</th>
+              <th>Clothes & Category</th>
+              <th>Pickup Date</th>
+              <th>Current Status</th>
+              <th>Update Workflow Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in requests %}
+              <tr>
+                <td><code>{{ r.request_code }}</code></td>
+                <td>
+                  <div style="font-weight: 700; color: var(--dark-navy);">{{ r.student_name }}</div>
+                  <div style="font-size: 0.75rem; color: var(--muted-text);">{{ r.hostel_block }} (Room {{ r.room_number or 'Unassigned' }})</div>
+                </td>
+                <td>
+                  <div style="font-weight: 700;">{{ r.cloth_count }} Garments</div>
+                  <div style="font-size: 0.78rem; color: var(--primary);">{{ r.service_category }}</div>
+                  {% if r.notes %}<div style="font-size: 0.72rem; color: var(--muted-text);">"{{ r.notes }}"</div>{% endif %}
+                </td>
+                <td>{{ r.collection_date or 'Next Slot' }}</td>
+                <td>
+                  {% if r.status == 'Delivered' %}
+                    <span class="badge badge-success">Delivered</span>
+                  {% elif r.status == 'Ready for Delivery' %}
+                    <span class="badge badge-info">Ready for Delivery</span>
+                  {% elif r.status == 'Washing' %}
+                    <span class="badge badge-warning">Washing</span>
+                  {% elif r.status == 'Collected' %}
+                    <span class="badge badge-primary">Collected</span>
+                  {% elif r.status == 'Cancelled' %}
+                    <span class="badge badge-danger">Cancelled</span>
+                  {% else %}
+                    <span class="badge badge-neutral">{{ r.status }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <form action="{{ url_for('warden_laundry') }}" method="POST" style="display: flex; gap: 0.4rem; min-width: 220px;">
+                    <input type="hidden" name="action" value="update_status">
+                    <input type="hidden" name="request_id" value="{{ r.id }}">
+                    <select name="status" class="form-select" style="font-size: 0.78rem; padding: 4px 6px;">
+                      <option value="Collected" {% if r.status == 'Collected' %}selected{% endif %}>Collected</option>
+                      <option value="Washing" {% if r.status == 'Washing' %}selected{% endif %}>Washing & Ironing</option>
+                      <option value="Ready for Delivery" {% if r.status == 'Ready for Delivery' %}selected{% endif %}>Ready for Delivery</option>
+                      <option value="Delivered" {% if r.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                      <option value="Cancelled" {% if r.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                    <button type="submit" class="btn btn-secondary btn-sm" style="padding: 3px 8px; font-size: 0.75rem;">
+                      Update
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">👕</div>
+        <h4>No Student Laundry Requests</h4>
+        <p>No laundry bundles submitted by students yet.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

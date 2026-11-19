@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+{% block title %}Chief Warden Dashboard{% endblock %}
+{% block page_title %}Hostel Administration Overview{% endblock %}
+
+{% block content %}
+<!-- WARDEN HERO BANNER -->
+<div style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%); color: white; border-radius: var(--radius-lg); padding: 1.75rem 2rem; margin-bottom: 2rem; box-shadow: var(--shadow-md);">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <span style="background: rgba(255,255,255,0.15); padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
+        Hostel Administration Control Center
+      </span>
+      <h2 style="font-size: 1.6rem; font-weight: 700; margin-top: 0.4rem;">
+        Welcome, {{ current_user.name }}
+      </h2>
+      <p style="font-size: 0.9rem; opacity: 0.9; margin-top: 0.2rem;">
+        Monitoring {{ hostel_name }} · Real-time occupancy, safety alerts, approvals, and facility requests.
+      </p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+      <a href="{{ url_for('warden_leave_requests') }}" class="btn btn-primary" style="background:#4f46e5; border:1px solid rgba(255,255,255,0.2);">
+        Review Leaves ({{ stats.pending_leaves }})
+      </a>
+      <a href="{{ url_for('warden_emergencies') }}" class="btn btn-danger" style="background: #dc2626; border: none;">
+        🚨 Emergency Desk ({{ stats.new_emergencies }})
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- REAL DATABASE COUNTS & METRICS GRID -->
+<div class="metrics-grid">
+  <!-- Total Students -->
+  <div class="metric-card">
+    <div class="metric-info">
+      <div class="label">Total Students</div>
+      <div class="value">{{ stats.total_students }}</div>
+      <div class="sub-text">Registered residents</div>
+    </div>
+    <div class="metric-icon-wrap indigo">👥</div>
+  </div>
+
+  <!-- Occupied Rooms -->
+  <div class="metric-card">
+    <div class="metric-info">
+      <div class="label">Occupied Rooms</div>
+      <div class="value">{{ stats.occupied_rooms }}</div>
+      <div class="sub-text">Out of {{ stats.total_rooms }} rooms</div>
+    </div>
+    <div class="metric-icon-wrap purple">🛏️</div>
+  </div>
+
+  <!-- Vacant Rooms -->
+  <div class="metric-card">
+    <div class="metric-info">
+      <div class="label">Vacant Rooms</div>
+      <div class="value" style="color: var(--success);">{{ stats.vacant_rooms }}</div>
+      <div class="sub-text">Available for allocation</div>
+    </div>
+    <div class="metric-icon-wrap emerald">🚪</div>
+  </div>
+
+  <!-- Pending Leaves -->
+  <div class="metric-card">
+    <div class="metric-info">
+      <div class="label">Pending Leaves</div>
+      <div class="value" style="color: var(--warning);">{{ stats.pending_leaves }}</div>
+      <div class="sub-text">Awaiting gate approval</div>
+    </div>
+    <div class="metric-icon-wrap amber">📋</div>
+  </div>
+
+  <!-- New Emergencies -->
+  <div class="metric-card" style="border: 2px solid {{ '#fca5a5' if stats.new_emergencies > 0 else 'var(--border)' }};">
+    <div class="metric-info">
+      <div class="label">Active Emergencies</div>
+      <div class="value" style="color: var(--danger);">{{ stats.new_emergencies }}</div>
+      <div class="sub-text">{{ 'Immediate action needed!' if stats.new_emergencies > 0 else 'All clear' }}</div>
+    </div>
+    <div class="metric-icon-wrap rose">🚨</div>
+  </div>
+
+  <!-- Unresolved Complaints -->
+  <div class="metric-card">
+    <div class="metric-info">
+      <div class="label">Open Complaints</div>
+      <div class="value">{{ stats.unresolved_complaints }}</div>
+      <div class="sub-text">Maintenance tickets</div>
+    </div>
+    <div class="metric-icon-wrap sky">🛠️</div>
+  </div>
+
+  <!-- Pending Payments -->
+  <div class="metric-card">
+    <div class="metric-info">
+      <div class="label">Unpaid Fee Dues</div>
+      <div class="value">{{ stats.pending_fees_count }}</div>
+      <div class="sub-text">Student accounts</div>
+    </div>
+    <div class="metric-icon-wrap amber">💳</div>
+  </div>
+
+  <!-- Active Laundry -->
+  <div class="metric-card">
+    <div class="metric-info">
+      <div class="label">Active Laundry</div>
+      <div class="value">{{ stats.active_laundry_count }}</div>
+      <div class="sub-text">Batches in wash cycle</div>
+    </div>
+    <div class="metric-icon-wrap purple">🧺</div>
+  </div>
+</div>
+
+<!-- OPERATIONAL DESKS: EMERGENCIES & LEAVE REQUESTS -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  <!-- Live Emergency Alerts -->
+  <div class="content-card" style="border-top: 4px solid var(--danger);">
+    <div class="card-header-bar" style="background: #fef2f2;">
+      <h3 style="color: #991b1b;">
+        <span>🚨</span> Urgent Emergency Alerts
+      </h3>
+      <a href="{{ url_for('warden_emergencies') }}" class="btn btn-danger btn-sm">Full Emergency Desk</a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      {% if emergencies %}
+        <div class="table-responsive">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>Resident</th>
+                <th>Category & Location</th>
+                <th>Priority</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for e in emergencies %}
+                <tr>
+                  <td>
+                    <div style="font-weight: 700; color: var(--dark-navy);">{{ e.student_name }}</div>
+                    <div style="font-size: 0.75rem; color: var(--muted-text);">{{ e.student_phone or 'No phone' }}</div>
+                  </td>
+                  <td>
+                    <div style="font-weight: 600; color: #dc2626;">{{ e.category }}</div>
+                    <div style="font-size: 0.78rem; color: var(--slate-text);">📍 {{ e.location_or_room }}</div>
+                  </td>
+                  <td>
+                    <span class="badge badge-{{ 'danger' if e.priority == 'Critical' else 'warning' }}">
+                      {{ e.priority }}
+                    </span>
+                  </td>
+                  <td>
+                    <a href="{{ url_for('warden_emergencies') }}" class="btn btn-secondary btn-sm">
+                      Respond
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon" style="color: #22c55e;">🛡️</div>
+          <h4>No Active Emergency Alerts</h4>
+          <p>Hostel resident premises are operating peacefully with zero active alerts.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Pending Leave Requests -->
+  <div class="content-card">
+    <div class="card-header-bar">
+      <h3>📋 Pending Leave Approvals</h3>
+      <a href="{{ url_for('warden_leave_requests') }}" class="btn btn-secondary btn-sm">View All</a>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      {% if leaves %}
+        <div class="table-responsive">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Type & Destination</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for l in leaves %}
+                <tr>
+                  <td>
+                    <div style="font-weight: 600; color: var(--dark-navy);">{{ l.student_name }}</div>
+                    <div style="font-size: 0.75rem; color: var(--muted-text);">{{ l.hostel_block }}</div>
+                  </td>
+                  <td>
+                    <div style="font-weight: 600;">{{ l.leave_type }}</div>
+                    <div style="font-size: 0.78rem; color: var(--muted-text);">📍 {{ l.destination }}</div>
+                  </td>
+                  <td>
+                    <a href="{{ url_for('warden_leave_requests') }}" class="btn btn-primary btn-sm">
+                      Review
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">✓</div>
+          <h4>No Pending Leave Requests</h4>
+          <p>All student movement permits have been reviewed and decided.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- RECENT COMPLAINTS TABLE -->
+<div class="content-card">
+  <div class="card-header-bar">
+    <div>
+      <h3>🛠️ Open Maintenance Complaints</h3>
+      <p>Real-time repair requests reported by hostel residents</p>
+    </div>
+    <a href="{{ url_for('warden_complaints') }}" class="btn btn-secondary btn-sm">All Complaints</a>
+  </div>
+  <div class="card-body" style="padding: 0;">
+    {% if complaints %}
+      <div class="table-responsive">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>Ticket Code</th>
+              <th>Student</th>
+              <th>Category</th>
+              <th>Subject</th>
+              <th>Priority</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in complaints %}
+              <tr>
+                <td><code>{{ c.complaint_code }}</code></td>
+                <td>
+                  <div style="font-weight: 600; color: var(--dark-navy);">{{ c.student_name }}</div>
+                  <div style="font-size: 0.75rem; color: var(--muted-text);">{{ c.hostel_block }}</div>
+                </td>
+                <td><span class="badge badge-primary">{{ c.category }}</span></td>
+                <td>
+                  <div style="font-weight: 600; font-size: 0.88rem;">{{ c.subject }}</div>
+                  <div style="font-size: 0.78rem; color: var(--muted-text);">📍 {{ c.location_or_room }}</div>
+                </td>
+                <td>
+                  <span class="badge badge-{{ 'danger' if c.priority == 'Urgent' else 'warning' if c.priority == 'High' else 'neutral' }}">
+                    {{ c.priority }}
+                  </span>
+                </td>
+                <td>
+                  <span class="badge badge-{{ 'info' if c.status == 'In Progress' else 'warning' }}">
+                    {{ c.status }}
+                  </span>
+                </td>
+                <td>
+                  <a href="{{ url_for('warden_complaints') }}" class="btn btn-secondary btn-sm">
+                    Manage
+                  </a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">🛠️</div>
+        <h4>All Maintenance Tickets Resolved</h4>
+        <p>No open repair requests currently requiring hostel intervention.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

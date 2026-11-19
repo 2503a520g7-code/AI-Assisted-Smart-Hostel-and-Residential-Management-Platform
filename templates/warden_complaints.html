@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+{% block title %}Complaints Desk{% endblock %}
+{% block page_title %}Maintenance & Complaints Desk{% endblock %}
+
+{% block content %}
+<div class="content-card">
+  <div class="card-header-bar">
+    <div>
+      <h3>🛠️ Resident Maintenance Tickets</h3>
+      <p>Assign technicians, monitor resolution progress, and respond to students</p>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <!-- FILTERS TOOLBAR -->
+    <form method="GET" action="{{ url_for('warden_complaints') }}" class="table-toolbar">
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <select name="status" class="form-select" style="width: auto;" onchange="this.form.submit()">
+          <option value="">All Statuses</option>
+          <option value="Submitted" {% if selected_status == 'Submitted' %}selected{% endif %}>Submitted</option>
+          <option value="Under Review" {% if selected_status == 'Under Review' %}selected{% endif %}>Under Review</option>
+          <option value="In Progress" {% if selected_status == 'In Progress' %}selected{% endif %}>In Progress</option>
+          <option value="Resolved" {% if selected_status == 'Resolved' %}selected{% endif %}>Resolved</option>
+          <option value="Rejected" {% if selected_status == 'Rejected' %}selected{% endif %}>Rejected</option>
+        </select>
+
+        <select name="category" class="form-select" style="width: auto;" onchange="this.form.submit()">
+          <option value="">All Categories</option>
+          <option value="Electricity" {% if selected_cat == 'Electricity' %}selected{% endif %}>Electricity</option>
+          <option value="Plumbing" {% if selected_cat == 'Plumbing' %}selected{% endif %}>Plumbing</option>
+          <option value="Cleanliness" {% if selected_cat == 'Cleanliness' %}selected{% endif %}>Cleanliness</option>
+          <option value="Wi-Fi / Internet" {% if selected_cat == 'Wi-Fi / Internet' %}selected{% endif %}>Wi-Fi / Internet</option>
+          <option value="Mess Food" {% if selected_cat == 'Mess Food' %}selected{% endif %}>Mess Food</option>
+          <option value="Room Maintenance" {% if selected_cat == 'Room Maintenance' %}selected{% endif %}>Room Maintenance</option>
+          <option value="Security" {% if selected_cat == 'Security' %}selected{% endif %}>Security</option>
+          <option value="Other" {% if selected_cat == 'Other' %}selected{% endif %}>Other</option>
+        </select>
+
+        <select name="priority" class="form-select" style="width: auto;" onchange="this.form.submit()">
+          <option value="">All Priorities</option>
+          <option value="Urgent" {% if selected_prio == 'Urgent' %}selected{% endif %}>Urgent</option>
+          <option value="High" {% if selected_prio == 'High' %}selected{% endif %}>High</option>
+          <option value="Medium" {% if selected_prio == 'Medium' %}selected{% endif %}>Medium</option>
+          <option value="Low" {% if selected_prio == 'Low' %}selected{% endif %}>Low</option>
+        </select>
+
+        {% if selected_status or selected_cat or selected_prio %}
+          <a href="{{ url_for('warden_complaints') }}" class="btn btn-secondary btn-sm" style="align-self: center;">Reset Filters</a>
+        {% endif %}
+      </div>
+    </form>
+
+    <!-- COMPLAINTS LIST -->
+    {% if complaints %}
+      <div style="display: grid; gap: 1.25rem;">
+        {% for c in complaints %}
+          <div style="border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1.25rem; background: #ffffff;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem;">
+              <div>
+                <span style="font-family: monospace; font-size: 0.85rem; font-weight: 700; color: var(--primary); background: #eef2ff; padding: 2px 8px; border-radius: 4px;">
+                  {{ c.complaint_code }}
+                </span>
+                <span class="badge badge-primary" style="margin-left: 6px;">{{ c.category }}</span>
+                <span class="badge badge-{{ 'danger' if c.priority == 'Urgent' else 'warning' if c.priority == 'High' else 'neutral' }}">
+                  {{ c.priority }} Priority
+                </span>
+                {% if c.ai_suggested_priority %}
+                  <span class="badge badge-neutral" style="font-size: 0.7rem;" title="AI Analysis Confidence: {{ (c.ai_confidence * 100) | round }}%">
+                    🤖 AI Tag: {{ c.ai_suggested_category }} ({{ c.ai_suggested_priority }})
+                  </span>
+                {% endif %}
+              </div>
+              <div>
+                <span class="badge badge-{{ 'success' if c.status == 'Resolved' else 'info' if c.status == 'In Progress' else 'warning' if c.status == 'Under Review' else 'danger' if c.status == 'Rejected' else 'neutral' }}">
+                  {{ c.status }}
+                </span>
+              </div>
+            </div>
+
+            <div style="margin-bottom: 0.75rem;">
+              <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--dark-navy); margin-bottom: 0.25rem;">
+                {{ c.subject }}
+              </h4>
+              <p style="font-size: 0.9rem; color: var(--slate-text);">
+                {{ c.description }}
+              </p>
+              <div style="font-size: 0.78rem; color: var(--muted-text); margin-top: 0.4rem;">
+                <b>Reported by:</b> {{ c.student_name }} ({{ c.student_email }}) · 
+                <b>Location:</b> 📍 {{ c.location_or_room }} ({{ c.hostel_block }}) · 
+                <b>Date:</b> {{ c.created_at[:16] }}
+              </div>
+            </div>
+
+            <!-- Thread Responses -->
+            {% set replies = responses_map.get(c.id, []) %}
+            {% if replies %}
+              <div style="background: #f8fafc; border-radius: 6px; padding: 0.75rem; margin-bottom: 0.75rem; display: grid; gap: 0.5rem;">
+                <div style="font-size: 0.72rem; font-weight: 700; color: var(--muted-text); text-transform: uppercase;">
+                  Conversation Thread:
+                </div>
+                {% for r in replies %}
+                  <div style="font-size: 0.82rem; padding: 0.4rem 0.6rem; border-radius: 4px; background: {{ '#eef2ff' if r.is_warden else '#ffffff' }}; border: 1px solid var(--border);">
+                    <b>{{ 'Hostel Warden' if r.is_warden else r.responder_name }}:</b> {{ r.message }}
+                    <span style="font-size: 0.7rem; color: var(--muted-text); margin-left: 6px;">{{ r.created_at[:16] }}</span>
+                  </div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <!-- Warden Management Action Bar -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; border-top: 1px dashed var(--border); padding-top: 0.75rem;">
+              <!-- Status & Technician Assignment Form -->
+              <form action="{{ url_for('warden_complaint_action', complaint_id=c.id) }}" method="POST" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <select name="status" class="form-select" style="font-size: 0.8rem; flex: 1; min-width: 130px;">
+                  <option value="Under Review" {% if c.status == 'Under Review' %}selected{% endif %}>Under Review</option>
+                  <option value="In Progress" {% if c.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                  <option value="Resolved" {% if c.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                  <option value="Rejected" {% if c.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                </select>
+
+                <input type="text" name="assigned_to" class="form-control" style="font-size: 0.8rem; flex: 1; min-width: 140px;"
+                       placeholder="Assign technician / staff..." value="{{ c.assigned_to or '' }}">
+
+                <input type="text" name="resolution_notes" class="form-control" style="font-size: 0.8rem; flex: 2; min-width: 180px;"
+                       placeholder="Resolution notes..." value="{{ c.resolution_notes or '' }}">
+
+                <button type="submit" class="btn btn-primary btn-sm">
+                  Update Ticket
+                </button>
+              </form>
+
+              <!-- Quick Reply to Student -->
+              <form action="{{ url_for('reply_complaint', complaint_id=c.id) }}" method="POST" style="display: flex; gap: 0.5rem;">
+                <input type="text" name="message" class="form-control" style="font-size: 0.8rem;" placeholder="Send official reply message to student..." required>
+                <button type="submit" class="btn btn-secondary btn-sm" style="white-space: nowrap;">
+                  Send Reply
+                </button>
+              </form>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">🛠️</div>
+        <h4>No Complaints Found</h4>
+        <p>No resident complaints match the selected filter criteria.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

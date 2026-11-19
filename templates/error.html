@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Error {{ code }}{% endblock %}
+{% block page_title %}Error {{ code }}{% endblock %}
+
+{% block content %}
+<div class="content-card" style="max-width: 600px; margin: 3rem auto; text-align: center; padding: 3rem 2rem;">
+  <div style="font-size: 4rem; color: var(--primary); font-weight: 800; margin-bottom: 0.5rem;">
+    {{ code }}
+  </div>
+  <h3 style="font-size: 1.4rem; color: var(--dark-navy); margin-bottom: 0.75rem;">
+    {{ title }}
+  </h3>
+  <p style="color: var(--muted-text); font-size: 0.95rem; margin-bottom: 2rem;">
+    {{ message }}
+  </p>
+  <div>
+    <a href="{{ url_for('index') }}" class="btn btn-primary">
+      <span>🏠</span> Return to Dashboard
+    </a>
+  </div>
+</div>
+{% endblock %}

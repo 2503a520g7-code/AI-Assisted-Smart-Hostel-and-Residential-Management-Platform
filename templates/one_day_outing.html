@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}One-Day Outing Permit{% endblock %}
+{% block page_title %}One-Day Outing Permit{% endblock %}
+
+{% block content %}
+<!-- LEAVE MODULE NAVIGATION TABS -->
+<div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+  <a href="{{ url_for('leave_outing') }}" class="btn btn-primary btn-sm">
+    🚶 One-Day Outing
+  </a>
+  <a href="{{ url_for('leave_vacation') }}" class="btn btn-secondary btn-sm">
+    🧳 Vacation Request (10 Days)
+  </a>
+  <a href="{{ url_for('leave_management') }}" class="btn btn-secondary btn-sm">
+    📝 General Leave Desk
+  </a>
+  <a href="{{ url_for('outpass_status') }}" class="btn btn-secondary btn-sm">
+    🎫 Outpass Status
+  </a>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+  <!-- One-Day Outing Application Form -->
+  <div class="content-card">
+    <div class="card-header-bar">
+      <div>
+        <h3>🚶 Apply for One-Day Outing Permit</h3>
+        <p>Local errands, day outings, and library/market visits (Same-day return by 09:30 PM)</p>
+      </div>
+    </div>
+    <div class="card-body">
+      <form action="{{ url_for('leave_outing') }}" method="POST">
+        <input type="hidden" name="leave_type" value="One-day outing">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="start_datetime">Departure Date & Time <span style="color:var(--danger)">*</span></label>
+            <input type="datetime-local" id="start_datetime" name="start_datetime" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="return_datetime">Expected Return Date & Time <span style="color:var(--danger)">*</span></label>
+            <input type="datetime-local" id="return_datetime" name="return_datetime" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="destination">Destination / Location <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="destination" name="destination" class="form-control"
+                 placeholder="e.g. City Central Mall / University Library / Market" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reason">Specific Reason for Outing <span style="color:var(--danger)">*</span></label>
+          <textarea id="reason" name="reason" rows="2" class="form-control"
+                    placeholder="e.g. Purchasing academic supplies and books" required></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="emergency_contact">Emergency Contact <span style="color:var(--danger)">*</span></label>
+            <input type="tel" id="emergency_contact" name="emergency_contact" class="form-control"
+                   value="{{ student.phone or '' }}" placeholder="+91 98765 00000" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="parent_phone">Parent / Guardian Phone</label>
+            <input type="tel" id="parent_phone" name="parent_phone" class="form-control"
+                   value="{{ student.guardian_phone or '' }}" placeholder="+91 98765 11111">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="additional_notes">Additional Travel Notes</label>
+          <input type="text" id="additional_notes" name="additional_notes" class="form-control"
+                 placeholder="e.g. Accompanied by roommate, using city bus">
+        </div>
+
+        <div style="background: var(--purple-soft); border-radius: var(--radius-sm); padding: 0.85rem; margin-bottom: 1.25rem; font-size: 0.82rem; color: var(--primary);">
+          ⏰ <b>Curfew Notice:</b> Standard hostel curfew is <b>09:30 PM</b>. One-day outings must conclude and pass scanned back at the main gate before curfew.
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          Submit One-Day Outing Request
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Outing History -->
+  <div class="content-card">
+    <div class="card-header-bar">
+      <h3>📜 My One-Day Outing Records</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      {% if outings %}
+        <div class="table-responsive">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>Destination</th>
+                <th>Departure - Return</th>
+                <th>Status</th>
+                <th>Outpass</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for o in outings %}
+                <tr>
+                  <td>
+                    <div style="font-weight: 600; color: var(--dark-navy);">{{ o.destination }}</div>
+                    <div style="font-size: 0.78rem; color: var(--muted-text);">{{ o.reason }}</div>
+                  </td>
+                  <td>
+                    <div style="font-size: 0.82rem;">{{ o.start_datetime.replace('T', ' ') }}</div>
+                    <div style="font-size: 0.76rem; color: var(--muted-text);">Return: {{ o.return_datetime.replace('T', ' ') }}</div>
+                  </td>
+                  <td>
+                    <span class="badge badge-{{ 'success' if o.status == 'Approved' else ('danger' if o.status == 'Rejected' else 'warning') }}">
+                      {{ o.status }}
+                    </span>
+                  </td>
+                  <td>
+                    {% if o.status == 'Approved' and o.outpass_id %}
+                      <a href="{{ url_for('view_outpass', outpass_id=o.outpass_id) }}" class="btn btn-primary btn-sm">
+                        View Pass
+                      </a>
+                    {% elif o.status == 'Pending' %}
+                      <span style="font-size: 0.78rem; color: var(--muted-text);">Awaiting Warden</span>
+                    {% else %}
+                      <span style="font-size: 0.78rem; color: var(--danger);">{{ o.decision_note or 'Rejected' }}</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">🚶</div>
+          <h4>No Outing Requests</h4>
+          <p>You have not submitted any one-day outing requests yet.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

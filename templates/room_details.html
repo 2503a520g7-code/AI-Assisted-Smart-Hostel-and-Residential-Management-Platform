@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+{% block title %}My Room Details{% endblock %}
+{% block page_title %}My Room Details{% endblock %}
+
+{% block content %}
+{% if room %}
+  <!-- ALLOCATED ROOM DETAILS -->
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <!-- Room Info Card -->
+    <div class="content-card" style="margin-bottom: 0;">
+      <div class="card-header-bar">
+        <div>
+          <h3>🛏️ Room {{ room.room_number }}</h3>
+          <p style="font-size: 0.8rem; color: var(--muted-text);">{{ room.block_name }}</p>
+        </div>
+        <span class="badge badge-success">Allocated & Active</span>
+      </div>
+      <div class="card-body">
+        <div style="display: grid; gap: 0.85rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--muted-text); font-size: 0.88rem;">Hostel Block:</span>
+            <span style="font-weight: 700; color: var(--dark-navy); font-size: 0.88rem;">{{ room.block_name }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--muted-text); font-size: 0.88rem;">Room Number:</span>
+            <span style="font-weight: 700; color: var(--primary); font-size: 1.05rem;">{{ room.room_number }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--muted-text); font-size: 0.88rem;">Room Type:</span>
+            <span style="font-weight: 600; color: var(--dark-navy); font-size: 0.88rem;">
+              {{ room.room_type or 'Double Sharing Standard' }}
+            </span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--muted-text); font-size: 0.88rem;">Floor:</span>
+            <span style="font-weight: 600; color: var(--dark-navy); font-size: 0.88rem;">Floor {{ room.floor }}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--muted-text); font-size: 0.88rem;">Room Capacity:</span>
+            <span style="font-weight: 600; color: var(--dark-navy); font-size: 0.88rem;">{{ room.capacity }} Students</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--muted-text); font-size: 0.88rem;">Current Occupancy:</span>
+            <span style="font-weight: 600; color: var(--dark-navy); font-size: 0.88rem;">{{ room.occupancy }} / {{ room.capacity }} Bed(s) Filled</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--muted-text); font-size: 0.88rem;">Allocation Status:</span>
+            <span class="badge badge-success">Allocated & Confirmed</span>
+          </div>
+          {% if allocation_record %}
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--muted-text); font-size: 0.88rem;">Allocated Date:</span>
+            <span style="font-weight: 600; color: var(--dark-navy); font-size: 0.88rem;">{{ allocation_record.allocated_date }}</span>
+          </div>
+          {% endif %}
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="color: var(--muted-text); font-size: 0.88rem;">Room Notes:</span>
+            <span style="color: var(--slate-text); font-size: 0.85rem;">{{ room.notes or 'Standard Residential Room' }}</span>
+          </div>
+        </div>
+
+        <div style="background: var(--primary-light); border-radius: var(--radius-sm); padding: 0.85rem; margin-top: 1.25rem; font-size: 0.82rem; color: var(--primary-dark);">
+          💡 <b>Furnishings Included:</b> High-speed Wi-Fi, personal study desk, ergonomics chair, steel almirah, ceiling fan, and 24x7 power backup sockets.
+        </div>
+      </div>
+    </div>
+
+    <!-- Roommates Card -->
+    <div class="content-card" style="margin-bottom: 0;">
+      <div class="card-header-bar">
+        <h3>👥 Roommates ({{ roommates | length }})</h3>
+        <span style="font-size: 0.8rem; color: var(--muted-text);">Bed sharing in Room {{ room.room_number }}</span>
+      </div>
+      <div class="card-body">
+        {% if roommates %}
+          <div style="display: grid; gap: 1rem;">
+            {% for r in roommates %}
+              <div style="display: flex; align-items: center; gap: 0.85rem; padding: 0.85rem; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);">
+                <div class="avatar-circle" style="width: 42px; height: 42px; font-size: 0.95rem;">
+                  {{ r.name[0] | upper }}
+                </div>
+                <div style="flex: 1;">
+                  <div style="font-weight: 700; font-size: 0.92rem; color: var(--dark-navy);">{{ r.name }}</div>
+                  <div style="font-size: 0.8rem; color: var(--muted-text);">{{ r.email }}</div>
+                  <div style="font-size: 0.78rem; color: var(--slate-text); margin-top: 2px;">
+                    {{ r.academic_year }}{% if r.department %} · {{ r.department }}{% endif %}
+                  </div>
+                  {% if r.phone %}
+                    <div style="font-size: 0.75rem; color: #4f46e5; margin-top: 3px; font-weight: 600;">
+                      📞 {{ r.phone }}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="empty-state" style="padding: 2.5rem 1rem;">
+            <div class="empty-state-icon" style="font-size: 2.2rem;">👤</div>
+            <h4>Single Occupant</h4>
+            <p>No other roommates currently assigned to this room.</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- CONNECTED LEAVE MANAGEMENT & OUTPASS SECTION (Directly accessible from Room Details) -->
+  <div class="content-card">
+    <div class="card-header-bar">
+      <div>
+        <h3>📋 Room Leave & Movement Outpasses</h3>
+        <p>Apply for permission to leave Room {{ room.room_number }} for campus outings or vacations</p>
+      </div>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <a href="{{ url_for('leave_outing') }}" class="btn btn-secondary btn-sm">
+          🚶 Apply One-Day Outing
+        </a>
+        <a href="{{ url_for('leave_vacation') }}" class="btn btn-secondary btn-sm">
+          🧳 Apply Vacation Leave
+        </a>
+        <a href="{{ url_for('leave_management') }}" class="btn btn-primary btn-sm">
+          📝 Leave Management Desk
+        </a>
+      </div>
+    </div>
+    <div class="card-body">
+      {% if active_outpasses %}
+        <div style="margin-bottom: 1rem;">
+          <h4 style="font-size: 0.92rem; color: var(--dark-navy); margin-bottom: 0.5rem;">Valid Active Outpasses from this Room</h4>
+          <div class="table-responsive">
+            <table class="modern-table">
+              <thead>
+                <tr>
+                  <th>Reference</th>
+                  <th>Permit Type</th>
+                  <th>Destination</th>
+                  <th>Departure</th>
+                  <th>Expected Return</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for o in active_outpasses %}
+                  <tr>
+                    <td><code>{{ o.outpass_ref }}</code></td>
+                    <td>{{ o.leave_type }}</td>
+                    <td>{{ o.destination }}</td>
+                    <td>{{ o.start_datetime.replace('T', ' ') }}</td>
+                    <td>{{ o.return_datetime.replace('T', ' ') }}</td>
+                    <td><span class="badge badge-success">Valid</span></td>
+                    <td>
+                      <a href="{{ url_for('view_outpass', outpass_id=o.id) }}" class="btn btn-primary btn-sm">
+                        View Digital Pass
+                      </a>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% else %}
+        <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid var(--border); border-radius: 8px; padding: 1.25rem; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h4 style="font-size: 0.95rem; color: var(--dark-navy); margin-bottom: 0.2rem;">Resident Currently In-Hostel</h4>
+            <p style="font-size: 0.85rem; color: var(--muted-text); margin: 0;">
+              No active movement outpasses. Planning to leave campus for an errand or weekend trip?
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.5rem;">
+            <a href="{{ url_for('leave_outing') }}" class="btn btn-primary btn-sm">
+              One-Day Outing Pass
+            </a>
+            <a href="{{ url_for('leave_management') }}" class="btn btn-secondary btn-sm">
+              All Leave Options
+            </a>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+{% else %}
+  <!-- UNALLOCATED STATE -->
+  <div class="content-card" style="max-width: 680px; margin: 2rem auto; text-align: center; padding: 3rem 2rem;">
+    <div class="empty-state-icon" style="font-size: 3.5rem;">🛏️</div>
+    <h3 style="font-size: 1.35rem; color: var(--dark-navy); margin-bottom: 0.35rem;">Room Not Yet Allocated</h3>
+    <p style="color: var(--muted-text); font-size: 0.88rem; margin-bottom: 0.85rem;">Room not yet allocated to resident account</p>
+    <div style="margin-bottom: 1.25rem;">
+      <span class="badge badge-warning" style="font-size: 0.85rem; padding: 5px 12px;">
+        Allocation Status: Pending Warden Assignment
+      </span>
+    </div>
+    <p style="color: var(--slate-text); font-size: 0.92rem; line-height: 1.6; margin-bottom: 1.5rem;">
+      Your residential registration for <b>{{ student.hostel_block }}</b> is confirmed and active in the database.
+      The Chief Warden office allocates specific room numbers and floor beds during hostel orientation and check-in.
+      Once allocated by the warden, your room number, floor, room type, and roommates will automatically appear here.
+    </p>
+
+    <div style="display: grid; gap: 0.75rem; max-width: 440px; margin: 0 auto 1.75rem; text-align: left; background: #f8fafc; padding: 1.25rem; border-radius: 8px; border: 1px solid var(--border); font-size: 0.85rem;">
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: var(--muted-text);">Student Name:</span>
+        <span style="font-weight: 600; color: var(--dark-navy);">{{ student.name }}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: var(--muted-text);">Hostel Block:</span>
+        <span style="font-weight: 600; color: var(--dark-navy);">{{ student.hostel_block }}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: var(--muted-text);">Academic Year:</span>
+        <span style="font-weight: 600; color: var(--dark-navy);">{{ student.academic_year }}</span>
+      </div>
+      <div style="display: flex; justify-content: space-between;">
+        <span style="color: var(--muted-text);">Room Status:</span>
+        <span style="font-weight: 600; color: #d97706;">Pending Allocation</span>
+      </div>
+    </div>
+
+    <div style="display: flex; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+      <a href="{{ url_for('leave_management') }}" class="btn btn-secondary">
+        📋 Apply for Outpass
+      </a>
+      <a href="{{ url_for('emergency_support') }}" class="btn btn-danger" style="background: #dc2626; color: white;">
+        🚨 Contact Warden Desk
+      </a>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Manage Mess Menu{% endblock %}
+{% block page_title %}Weekly Mess Timetable Management{% endblock %}
+
+{% block content %}
+<div class="content-card">
+  <div class="card-header-bar">
+    <div>
+      <h3>🍽️ Configure Weekly Dining Timetable</h3>
+      <p>Edit meal plans, mark special feasts, and broadcast menu updates</p>
+    </div>
+    <!-- Publish All Notification Button -->
+    <form action="{{ url_for('warden_mess_menu') }}" method="POST">
+      <input type="hidden" name="action" value="publish_all">
+      <button type="submit" class="btn btn-primary" onclick="return confirm('Publish updated menu and notify all students?');">
+        📢 Publish Menu & Notify Students
+      </button>
+    </form>
+  </div>
+
+  <div class="card-body">
+    <div style="background: var(--purple-soft); border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin-bottom: 1.5rem; font-size: 0.85rem; color: var(--primary-dark);">
+      ⭐ <b>Special Meal Policy:</b> <b>Sunday Afternoon Lunch</b> and <b>Wednesday Dinner</b> are designated special feast meals. Mark the "Special Meal" checkbox to enable the distinctive amber/emerald badges on student dashboards.
+    </div>
+
+    <!-- EDIT / ADD MEAL SLOTS FORM -->
+    <div class="content-card" style="border: 1px dashed var(--primary); background: #fdfefe; margin-bottom: 2rem;">
+      <div class="card-header-bar" style="background: transparent;">
+        <h4>✏️ Quick Edit / Add Meal Slot</h4>
+      </div>
+      <div class="card-body">
+        <form action="{{ url_for('warden_mess_menu') }}" method="POST">
+          <input type="hidden" name="action" value="save_item">
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="day_of_week">Day of Week <span style="color:var(--danger)">*</span></label>
+              <select id="day_of_week" name="day_of_week" class="form-select" required>
+                <option value="Monday">Monday</option>
+                <option value="Tuesday">Tuesday</option>
+                <option value="Wednesday">Wednesday (Special Dinner Day)</option>
+                <option value="Thursday">Thursday</option>
+                <option value="Friday">Friday</option>
+                <option value="Saturday">Saturday</option>
+                <option value="Sunday">Sunday (Special Lunch Day)</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="meal_type">Meal Slot <span style="color:var(--danger)">*</span></label>
+              <select id="meal_type" name="meal_type" class="form-select" required>
+                <option value="Breakfast">Breakfast</option>
+                <option value="Lunch">Lunch</option>
+                <option value="Evening Snacks">Evening Snacks</option>
+                <option value="Dinner">Dinner</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="timing">Serving Timings</label>
+              <input type="text" id="timing" name="timing" class="form-control"
+                     placeholder="e.g. 12:30 - 02:00 PM">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="items">Food Items List (Comma separated) <span style="color:var(--danger)">*</span></label>
+            <textarea id="items" name="items" rows="2" class="form-control"
+                      placeholder="e.g. Steamed Rice, Dal Makhani, Paneer Butter Masala, Butter Naan, Gulab Jamun" required></textarea>
+          </div>
+
+          <div class="form-row" style="align-items: center;">
+            <div class="form-group" style="flex: 1;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; color: #b45309; cursor: pointer;">
+                <input type="checkbox" name="is_special" value="1" style="width: 18px; height: 18px;">
+                ⭐ Mark as Special Meal / Feast
+              </label>
+            </div>
+
+            <div class="form-group" style="flex: 2;">
+              <input type="text" name="special_note" class="form-control"
+                     placeholder="Optional special note, e.g. Chef's Special Biryani & Hot Jalebi">
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-sm">
+            Save Meal Items
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- CURRENT TIMETABLE TABLE -->
+    <div class="table-responsive">
+      <table class="modern-table">
+        <thead>
+          <tr>
+            <th>Day</th>
+            <th>Meal Slot</th>
+            <th>Timings</th>
+            <th>Menu Items</th>
+            <th>Special Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for m in menu_rows %}
+            <tr style="background: {{ '#fef3c7' if (m.day_of_week == 'Wednesday' and m.meal_type == 'Dinner') else '#ecfdf5' if (m.day_of_week == 'Sunday' and m.meal_type == 'Lunch') else 'transparent' }};">
+              <td><b>{{ m.day_of_week }}</b></td>
+              <td><span class="badge badge-primary">{{ m.meal_type }}</span></td>
+              <td>{{ m.timing }}</td>
+              <td>
+                <div style="font-size: 0.88rem; color: var(--dark-navy);">{{ m.items }}</div>
+                {% if m.special_note %}
+                  <div style="font-size: 0.75rem; color: #b45309; font-style: italic; margin-top: 2px;">
+                    ✨ {{ m.special_note }}
+                  </div>
+                {% endif %}
+              </td>
+              <td>
+                {% if m.is_special or (m.day_of_week == 'Wednesday' and m.meal_type == 'Dinner') or (m.day_of_week == 'Sunday' and m.meal_type == 'Lunch') %}
+                  <span class="badge badge-warning">⭐ Special Feast</span>
+                {% else %}
+                  <span class="badge badge-neutral">Standard</span>
+                {% endif %}
+              </td>
+              <td>
+                <button type="button" class="btn btn-secondary btn-sm"
+                        onclick="populateEditForm('{{ m.day_of_week }}', '{{ m.meal_type }}', '{{ m.timing }}', '{{ m.items | escape }}', {{ m.is_special }}, '{{ m.special_note | escape }}')">
+                  Edit
+                </button>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function populateEditForm(day, meal, timing, items, isSpec, note) {
+  document.getElementById('day_of_week').value = day;
+  document.getElementById('meal_type').value = meal;
+  document.getElementById('timing').value = timing;
+  document.getElementById('items').value = items;
+  const specCb = document.querySelector('input[name="is_special"]');
+  if (specCb) specCb.checked = (isSpec === 1);
+  const noteInput = document.querySelector('input[name="special_note"]');
+  if (noteInput) noteInput.value = note || '';
+  window.scrollTo({ top: 300, behavior: 'smooth' });
+}
+</script>
+{% endblock %}

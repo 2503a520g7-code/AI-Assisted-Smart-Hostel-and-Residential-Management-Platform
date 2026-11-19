@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Registration — AIAC Smart Hostel Platform</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
+  <style>
+    .form-section-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--dark-navy);
+      padding-bottom: 0.4rem;
+      border-bottom: 2px solid var(--primary-light);
+      margin: 1.5rem 0 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .form-section-title:first-of-type {
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+<div class="auth-wrapper" style="padding: 2.5rem 1rem;">
+  <div class="auth-card" style="max-width: 620px;">
+    <div class="auth-header">
+      <div class="auth-logo">AI</div>
+      <h2>Student Registration</h2>
+      <p>Create your official AIAC hostel residential account</p>
+    </div>
+
+    <div class="auth-body">
+      <!-- FLASH MESSAGES -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">
+              <span>{{ message }}</span>
+              <button type="button" class="close-btn">&times;</button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <form action="{{ url_for('register') }}" method="POST">
+        <!-- 1. PERSONAL DETAILS SECTION -->
+        <div class="form-section-title">
+          <span>👤</span> Personal & Academic Details
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="name">Full Name <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="name" name="name" class="form-control"
+                 placeholder="e.g. Harshitha Sharma" value="{{ name or '' }}" required autofocus>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="email">College Email Address <span style="color:var(--danger)">*</span></label>
+            <input type="email" id="email" name="email" class="form-control"
+                   placeholder="student.id@{{ college_email_domain }}"
+                   value="{{ email or '' }}" required>
+            <div class="form-hint">Must end with <b>@{{ college_email_domain }}</b></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="student_id">Student ID / Roll No <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="student_id" name="student_id" class="form-control"
+                   placeholder="e.g. 2024-CS-0842" value="{{ student_id or '' }}" required>
+            <div class="form-hint">Unique institutional identification number</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="department">Department / Major <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="department" name="department" list="departmentList" class="form-control"
+                   placeholder="e.g. Computer Science & Engineering" value="{{ department or '' }}" required>
+            <datalist id="departmentList">
+              <option value="Computer Science & Engineering">
+              <option value="Information Technology">
+              <option value="Electronics & Communication">
+              <option value="Electrical & Electronics">
+              <option value="Mechanical Engineering">
+              <option value="Civil Engineering">
+              <option value="Data Science & AI">
+              <option value="Biotechnology">
+              <option value="Business Administration">
+            </datalist>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="phone">Contact Mobile Number <span style="color:var(--danger)">*</span></label>
+            <input type="tel" id="phone" name="phone" class="form-control"
+                   placeholder="+91 98765 43210" value="{{ phone or '' }}" required>
+          </div>
+        </div>
+
+        <!-- 2. HOSTEL DETAILS SECTION -->
+        <div class="form-section-title">
+          <span>🏢</span> Hostel & Room Allocation Details
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="hostel_block">Hostel Block <span style="color:var(--danger)">*</span></label>
+            <select id="hostel_block" name="hostel_block" class="form-select" onchange="updateRoomSuggestions()" required>
+              <option value="">Select your assigned block</option>
+              {% for b in blocks %}
+                <option value="{{ b.name }}" {% if hostel_block == b.name %}selected{% endif %}>
+                  {{ b.name }} ({{ b.gender_type }})
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="room_number">Room Number <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="room_number" name="room_number" list="roomDatalist" class="form-control"
+                   placeholder="e.g. 101, 202, 303" value="{{ room_number or '' }}" required>
+            <datalist id="roomDatalist"></datalist>
+            <div id="roomHint" class="form-hint">Enter your existing or assigned room number</div>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="academic_year">Academic Year <span style="color:var(--danger)">*</span></label>
+            <select id="academic_year" name="academic_year" class="form-select" required>
+              <option value="">Select academic year</option>
+              <option value="1st Year (Freshman)" {% if academic_year == '1st Year (Freshman)' %}selected{% endif %}>1st Year (Freshman)</option>
+              <option value="2nd Year (Sophomore)" {% if academic_year == '2nd Year (Sophomore)' %}selected{% endif %}>2nd Year (Sophomore)</option>
+              <option value="3rd Year (Junior)" {% if academic_year == '3rd Year (Junior)' %}selected{% endif %}>3rd Year (Junior)</option>
+              <option value="4th Year (Senior)" {% if academic_year == '4th Year (Senior)' %}selected{% endif %}>4th Year (Senior)</option>
+              <option value="Postgraduate / PhD" {% if academic_year == 'Postgraduate / PhD' %}selected{% endif %}>Postgraduate / PhD</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="room_type">Room Type <span style="font-size:0.75rem; color:var(--muted-text); font-weight:normal;">(if applicable)</span></label>
+            <select id="room_type" name="room_type" class="form-select">
+              <option value="Double Sharing Standard" {% if room_type == 'Double Sharing Standard' %}selected{% endif %}>Double Sharing Standard</option>
+              <option value="Triple Sharing Standard" {% if room_type == 'Triple Sharing Standard' %}selected{% endif %}>Triple Sharing Standard</option>
+              <option value="Single Occupancy Deluxe" {% if room_type == 'Single Occupancy Deluxe' %}selected{% endif %}>Single Occupancy Deluxe</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 3. SECURITY CREDENTIALS -->
+        <div class="form-section-title">
+          <span>🔒</span> Security Password
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="password">Password <span style="color:var(--danger)">*</span></label>
+            <input type="password" id="password" name="password" class="form-control"
+                   placeholder="Min. 8 characters" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="confirm_password">Confirm Password <span style="color:var(--danger)">*</span></label>
+            <input type="password" id="confirm_password" name="confirm_password" class="form-control"
+                   placeholder="Re-enter password" required>
+          </div>
+        </div>
+
+        <div style="font-size: 0.76rem; color: var(--muted-text); margin-bottom: 1.25rem;">
+          🔒 Password must be at least 8 characters long and contain both letters and numbers.
+        </div>
+
+        <div>
+          <button type="submit" class="btn btn-primary btn-block" style="padding: 0.85rem; font-weight: 700;">
+            Submit Registration
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <div class="auth-footer" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+      <a href="{{ url_for('index') }}" style="font-size: 0.82rem; color: var(--muted-text);">← Back to Welcome</a>
+      <span>Already registered? <a href="{{ url_for('login') }}" style="font-weight: 700;">Sign in to your account</a></span>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Available rooms per block embedded from backend
+  const roomsByBlock = {{ rooms_by_block | tojson if rooms_by_block else '{}' }};
+
+  function updateRoomSuggestions() {
+    const blockSelect = document.getElementById('hostel_block');
+    const datalist = document.getElementById('roomDatalist');
+    const roomHint = document.getElementById('roomHint');
+    const selectedBlock = blockSelect.value;
+
+    datalist.innerHTML = '';
+    if (selectedBlock && roomsByBlock[selectedBlock]) {
+      const rooms = roomsByBlock[selectedBlock];
+      rooms.forEach(r => {
+        const opt = document.createElement('option');
+        opt.value = r;
+        datalist.appendChild(opt);
+      });
+      roomHint.innerHTML = `Available rooms in ${selectedBlock}: <b>${rooms.slice(0, 8).join(', ')}...</b>`;
+    } else {
+      roomHint.innerHTML = 'Enter your existing or assigned room number';
+    }
+  }
+
+  // Initialize on load if block is already selected
+  document.addEventListener('DOMContentLoaded', updateRoomSuggestions);
+</script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

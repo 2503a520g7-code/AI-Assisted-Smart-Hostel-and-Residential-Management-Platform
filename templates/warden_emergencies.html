@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% block title %}Emergency Operations Desk{% endblock %}
+{% block page_title %}Hostel Emergency & Incident Desk{% endblock %}
+
+{% block content %}
+<div class="content-card">
+  <div class="card-header-bar" style="background: #fef2f2; border-bottom: 2px solid #ef4444;">
+    <div>
+      <h3 style="color: #991b1b;">
+        <span>🚨</span> Active Emergency Reports
+      </h3>
+      <p style="color: #b91c1c;">Priority incidents reported by campus residents</p>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <!-- FILTERS -->
+    <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+      <a href="{{ url_for('warden_emergencies') }}" class="btn btn-{{ 'primary' if not selected_status else 'secondary' }} btn-sm">
+        All Reports
+      </a>
+      <a href="{{ url_for('warden_emergencies', status='New') }}" class="btn btn-{{ 'primary' if selected_status == 'New' else 'secondary' }} btn-sm">
+        New Alerts
+      </a>
+      <a href="{{ url_for('warden_emergencies', status='Acknowledged') }}" class="btn btn-{{ 'primary' if selected_status == 'Acknowledged' else 'secondary' }} btn-sm">
+        Acknowledged
+      </a>
+      <a href="{{ url_for('warden_emergencies', status='In Progress') }}" class="btn btn-{{ 'primary' if selected_status == 'In Progress' else 'secondary' }} btn-sm">
+        In Progress
+      </a>
+      <a href="{{ url_for('warden_emergencies', status='Resolved') }}" class="btn btn-{{ 'primary' if selected_status == 'Resolved' else 'secondary' }} btn-sm">
+        Resolved
+      </a>
+    </div>
+
+    <!-- ALERTS TABLE -->
+    {% if alerts %}
+      <div class="table-responsive">
+        <table class="modern-table">
+          <thead>
+            <tr>
+              <th>Resident</th>
+              <th>Incident Category</th>
+              <th>Location</th>
+              <th>Priority</th>
+              <th>Details & Notes</th>
+              <th>Status</th>
+              <th>Manage Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for a in alerts %}
+              <tr style="background: {{ '#fff5f5' if a.status == 'New' else 'transparent' }};">
+                <td>
+                  <div style="font-weight: 700; color: var(--dark-navy);">{{ a.student_name }}</div>
+                  <div style="font-size: 0.78rem; color: var(--muted-text);">{{ a.student_email }}</div>
+                  <div style="font-size: 0.75rem; color: var(--danger); font-weight: 600;">
+                    📞 {{ a.student_phone or a.contact_number or 'No phone' }}
+                  </div>
+                </td>
+                <td>
+                  <div style="font-weight: 700; color: #dc2626;">{{ a.category }}</div>
+                </td>
+                <td>
+                  <div style="font-weight: 600; color: var(--dark-navy);">📍 {{ a.location_or_room }}</div>
+                  <div style="font-size: 0.72rem; color: var(--muted-text);">Wing: {{ a.hostel_block }}</div>
+                </td>
+                <td>
+                  <span class="badge badge-{{ 'danger' if a.priority == 'Critical' else 'warning' }}">
+                    {{ a.priority }}
+                  </span>
+                </td>
+                <td>
+                  <div style="font-size: 0.85rem; color: var(--slate-text); max-width: 250px;">
+                    {{ a.description }}
+                  </div>
+                  <div style="font-size: 0.72rem; color: var(--muted-text); margin-top: 4px;">
+                    Reported: {{ a.created_at[:16] }}
+                  </div>
+                  {% if a.resolution_notes %}
+                    <div style="font-size: 0.75rem; color: #047857; margin-top: 4px;">
+                      <b>Resolution:</b> {{ a.resolution_notes }}
+                    </div>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if a.status == 'New' %}
+                    <span class="badge badge-danger">New Alert</span>
+                  {% elif a.status == 'Acknowledged' %}
+                    <span class="badge badge-warning">Acknowledged</span>
+                  {% elif a.status == 'In Progress' %}
+                    <span class="badge badge-info">In Progress</span>
+                  {% elif a.status == 'Resolved' %}
+                    <span class="badge badge-success">Resolved</span>
+                  {% endif %}
+                </td>
+                <td>
+                  <form action="{{ url_for('warden_emergency_action', alert_id=a.id) }}" method="POST" style="display: flex; flex-direction: column; gap: 0.35rem; min-width: 170px;">
+                    <select name="status" class="form-select" style="font-size: 0.78rem; padding: 4px 6px;">
+                      <option value="Acknowledged" {% if a.status == 'Acknowledged' %}selected{% endif %}>Acknowledged</option>
+                      <option value="In Progress" {% if a.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                      <option value="Resolved" {% if a.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                    </select>
+                    <input type="text" name="resolution_notes" class="form-control" style="font-size: 0.75rem; padding: 4px 6px;"
+                           placeholder="Action taken / notes..." value="{{ a.resolution_notes or '' }}">
+                    <button type="submit" class="btn btn-secondary btn-sm" style="padding: 3px 6px; font-size: 0.75rem;">
+                      Update Status
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon" style="color: #22c55e;">🛡️</div>
+        <h4>No Emergency Incidents</h4>
+        <p>No reports currently under the selected status filter.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% block title %}Holiday Calendar{% endblock %}
+{% block page_title %}Academic & Hostel Holiday Calendar{% endblock %}
+
+{% block content %}
+<!-- HEADER BANNER -->
+<div style="background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); border-radius: var(--radius-lg); padding: 1.75rem 2rem; color: white; margin-bottom: 2rem; box-shadow: var(--shadow-md);">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+    <div>
+      <span style="background: rgba(255,255,255,0.2); padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">
+        Academic Year 2026-27
+      </span>
+      <h2 style="font-size: 1.5rem; font-weight: 700; margin-top: 0.4rem;">
+        📅 Campus Holidays & Special Schedules
+      </h2>
+      <p style="font-size: 0.88rem; opacity: 0.9; margin-top: 0.2rem;">
+        Check upcoming public holidays, festival breaks, special mess hours, and campus movement rules.
+      </p>
+    </div>
+    {% if current_user.role == 'student' %}
+    <div>
+      <a href="{{ url_for('leave_vacation') }}" class="btn btn-secondary" style="background:#ffffff; color:#4338ca; font-weight:700; border:none;">
+        🧳 Apply for Festival Leave
+      </a>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+  <!-- UPCOMING HOLIDAYS LIST -->
+  <div class="content-card" style="margin-bottom: 0;">
+    <div class="card-header-bar">
+      <div>
+        <h3>🎉 Official Campus Holidays ({{ holidays | length }})</h3>
+        <p>College sanctioned holidays and residential services timetable</p>
+      </div>
+    </div>
+    <div class="card-body">
+      {% if holidays %}
+        <div style="display: grid; gap: 1.25rem;">
+          {% for h in holidays %}
+            <div style="border: 1px solid var(--border); border-left: 5px solid var(--primary); border-radius: 8px; padding: 1.25rem; background: #ffffff; box-shadow: var(--shadow-sm);">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                  <h4 style="font-size: 1.05rem; font-weight: 700; color: var(--dark-navy); margin-bottom: 0.2rem;">
+                    {{ h.title }}
+                  </h4>
+                  <span class="badge badge-secondary" style="font-size: 0.75rem;">
+                    {{ h.holiday_type }}
+                  </span>
+                </div>
+                <div style="text-align: right;">
+                  <span style="font-weight: 700; color: var(--primary); font-size: 0.92rem;">
+                    📅 {{ h.holiday_date }}
+                    {% if h.end_date and h.end_date != h.holiday_date %}
+                      to {{ h.end_date }}
+                    {% endif %}
+                  </span>
+                </div>
+              </div>
+
+              <p style="font-size: 0.86rem; color: var(--slate-text); line-height: 1.5; margin-bottom: 0.85rem;">
+                {{ h.description }}
+              </p>
+
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; background: #f8fafc; padding: 0.75rem; border-radius: 6px; font-size: 0.8rem;">
+                <div>
+                  <span style="color: var(--muted-text);">🍽️ Mess Dining Status:</span>
+                  <div style="font-weight: 600; color: #047857; margin-top: 2px;">
+                    {{ h.mess_service_status }}
+                  </div>
+                </div>
+                <div>
+                  <span style="color: var(--muted-text);">🚶 Outpass / Movement:</span>
+                  <div style="font-weight: 600; color: var(--primary); margin-top: 2px;">
+                    {% if h.is_outing_allowed %}
+                      Permitted (Standard Curfew)
+                    {% else %}
+                      Restricted / Permission Required
+                    {% endif %}
+                  </div>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">📅</div>
+          <h4>No Holidays Scheduled</h4>
+          <p>No upcoming official campus holidays recorded.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- RIGHT COLUMN: GUIDELINES & WARDEN FORM -->
+  <div>
+    <!-- Holiday Living Guidelines -->
+    <div class="content-card">
+      <div class="card-header-bar">
+        <h3>ℹ️ Residential Holiday Guidelines</h3>
+      </div>
+      <div class="card-body" style="font-size: 0.88rem; color: var(--slate-text); line-height: 1.6;">
+        <ul style="padding-left: 1.25rem; display: grid; gap: 0.75rem;">
+          <li><b>Mess Operations:</b> On major festive holidays, special brunch and celebration buffets are provided. Evening snacks timings may vary.</li>
+          <li><b>Vacation Applications:</b> For multi-day breaks (Diwali / Semester vacations), submit your vacation leave request at least <b>48 hours in advance</b> with parent phone confirmation.</li>
+          <li><b>Campus Gate Security:</b> Security desks remain functional 24x7 during all public holidays. Outpasses must be scanned before exit.</li>
+          <li><b>Medical Emergency:</b> The 24/7 campus ambulance and medical infirmary remain open on all holidays without disruption.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Warden Add Holiday Form (Visible if Warden) -->
+    {% if current_user.role == 'warden' %}
+    <div class="content-card">
+      <div class="card-header-bar">
+        <h3>➕ Add Official Holiday Notice</h3>
+      </div>
+      <div class="card-body">
+        <form action="{{ url_for('warden_add_holiday') }}" method="POST">
+          <div class="form-group">
+            <label class="form-label" for="title">Holiday Name / Occasion <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Holi Spring Festival" required>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="holiday_date">Start Date <span style="color:var(--danger)">*</span></label>
+              <input type="date" id="holiday_date" name="holiday_date" class="form-control" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="end_date">End Date</label>
+              <input type="date" id="end_date" name="end_date" class="form-control">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="holiday_type">Category</label>
+            <select id="holiday_type" name="holiday_type" class="form-select">
+              <option value="Festival Holiday">Festival Holiday</option>
+              <option value="Public Holiday">Public Holiday</option>
+              <option value="Semester Break">Semester Break</option>
+              <option value="College Holiday">College Holiday</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="mess_service_status">Mess Operational Status</label>
+            <input type="text" id="mess_service_status" name="mess_service_status" class="form-control"
+                   placeholder="e.g. Festive Special Feast / Brunch Only">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="description">Hostel Description & Guidelines</label>
+            <textarea id="description" name="description" rows="2" class="form-control"
+                      placeholder="Add details on celebrations, gate hours, or mess menu changes"></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">
+            Publish Holiday to Campus Calendar
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

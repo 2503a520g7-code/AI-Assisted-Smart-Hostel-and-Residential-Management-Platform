@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Leave & Outpass{% endblock %}
+{% block page_title %}Leave Management & Outpasses{% endblock %}
+
+{% block content %}
+<!-- LEAVE MODULE NAVIGATION TABS -->
+<div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+  <a href="{{ url_for('leave_outing') }}" class="btn btn-secondary btn-sm">
+    🚶 One-Day Outing
+  </a>
+  <a href="{{ url_for('leave_vacation') }}" class="btn btn-secondary btn-sm">
+    🧳 Vacation Request (10 Days)
+  </a>
+  <a href="{{ url_for('leave_management') }}" class="btn btn-primary btn-sm">
+    📝 General Leave Desk
+  </a>
+  <a href="{{ url_for('outpass_status') }}" class="btn btn-secondary btn-sm">
+    🎫 Outpass Status
+  </a>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.5rem;">
+  <!-- Leave Request Form -->
+  <div class="content-card">
+    <div class="card-header-bar">
+      <h3>📋 Apply for Movement Outpass</h3>
+    </div>
+    <div class="card-body">
+      <form action="{{ url_for('leave_management') }}" method="POST">
+        <div class="form-group">
+          <label class="form-label" for="leave_type">Leave Type <span style="color:var(--danger)">*</span></label>
+          <select id="leave_type" name="leave_type" class="form-select" required>
+            <option value="One-day outing">One-day outing (Local errand / day pass)</option>
+            <option value="Overnight leave">Overnight leave (Returning next day)</option>
+            <option value="Multiple-day vacation">Multiple-day vacation (Holiday / semester break)</option>
+            <option value="Emergency leave">Emergency leave (Urgent family / medical)</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="start_datetime">Departure Date & Time <span style="color:var(--danger)">*</span></label>
+            <input type="datetime-local" id="start_datetime" name="start_datetime" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="return_datetime">Expected Return Date & Time <span style="color:var(--danger)">*</span></label>
+            <input type="datetime-local" id="return_datetime" name="return_datetime" class="form-control" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="destination">Destination / Location <span style="color:var(--danger)">*</span></label>
+          <input type="text" id="destination" name="destination" class="form-control"
+                 placeholder="e.g. Home / City Center / Bangalore" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="reason">Reason for Leave <span style="color:var(--danger)">*</span></label>
+          <textarea id="reason" name="reason" rows="2" class="form-control"
+                    placeholder="Provide specific reason for campus departure" required></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="emergency_contact">Emergency Contact <span style="color:var(--danger)">*</span></label>
+            <input type="tel" id="emergency_contact" name="emergency_contact" class="form-control"
+                   placeholder="+91 98765 00000" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="parent_phone">Parent / Guardian Phone</label>
+            <input type="tel" id="parent_phone" name="parent_phone" class="form-control"
+                   placeholder="+91 98765 11111">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="additional_notes">Additional Notes</label>
+          <input type="text" id="additional_notes" name="additional_notes" class="form-control"
+                 placeholder="e.g. Travelling via train, accompanied by friend">
+        </div>
+
+        <div style="background: var(--purple-soft); border-radius: var(--radius-sm); padding: 0.75rem; margin-bottom: 1.25rem; font-size: 0.8rem; color: var(--primary);">
+          ⏰ <b>Curfew Notice:</b> Standard hostel curfew is 09:30 PM. Overnight and vacation leaves require warden approval before pass issuance.
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          Submit Leave Request
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Leave History & Status -->
+  <div class="content-card">
+    <div class="card-header-bar">
+      <h3>📜 My Leave History & Outpasses</h3>
+    </div>
+    <div class="card-body" style="padding: 0;">
+      {% if leaves %}
+        <div class="table-responsive">
+          <table class="modern-table">
+            <thead>
+              <tr>
+                <th>Type & Destination</th>
+                <th>Dates</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for l in leaves %}
+                <tr>
+                  <td>
+                    <div style="font-weight: 600; color: var(--dark-navy);">{{ l.leave_type }}</div>
+                    <div style="font-size: 0.78rem; color: var(--muted-text);">📍 {{ l.destination }}</div>
+                    <div style="font-size: 0.75rem; color: #64748b; font-style: italic;">"{{ l.reason }}"</div>
+                  </td>
+                  <td>
+                    <div style="font-size: 0.8rem;"><b>Out:</b> {{ l.start_datetime.replace('T', ' ') }}</div>
+                    <div style="font-size: 0.8rem;"><b>In:</b> {{ l.return_datetime.replace('T', ' ') }}</div>
+                  </td>
+                  <td>
+                    {% if l.status == 'Approved' %}
+                      <span class="badge badge-success">Approved</span>
+                    {% elif l.status == 'Pending' %}
+                      <span class="badge badge-warning">Pending Review</span>
+                    {% elif l.status == 'Rejected' %}
+                      <span class="badge badge-danger">Rejected</span>
+                    {% else %}
+                      <span class="badge badge-neutral">{{ l.status }}</span>
+                    {% endif %}
+
+                    {% if l.decision_note %}
+                      <div style="font-size: 0.72rem; color: var(--muted-text); margin-top: 3px;">
+                        Note: {{ l.decision_note }}
+                      </div>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if l.status == 'Approved' and l.outpass_id %}
+                      <a href="{{ url_for('view_outpass', outpass_id=l.outpass_id) }}" class="btn btn-primary btn-sm">
+                        View Outpass
+                      </a>
+                    {% elif l.status == 'Pending' %}
+                      <form action="{{ url_for('cancel_leave', leave_id=l.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('Cancel this pending leave request?');">
+                        <button type="submit" class="btn btn-secondary btn-sm" style="color: var(--danger);">
+                          Cancel
+                        </button>
+                      </form>
+                    {% else %}
+                      <span style="font-size: 0.8rem; color: var(--muted-text);">No pass</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="empty-state">
+          <div class="empty-state-icon">📋</div>
+          <h4>No Leave Requests Yet</h4>
+          <p>Fill out the application form on the left to submit an outpass request.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block page_title %}Notifications Hub{% endblock %}
+
+{% block content %}
+<div class="content-card" style="max-width: 900px; margin: 0 auto;">
+  <div class="card-header-bar">
+    <div>
+      <h3>🔔 All Notifications</h3>
+      <p>Stay updated on leaves, outpasses, mess menus, payments, and emergencies</p>
+    </div>
+    {% if notifications %}
+      <form action="{{ url_for('mark_all_notifications_read') }}" method="POST">
+        <button type="submit" class="btn btn-secondary btn-sm">
+          ✓ Mark All as Read
+        </button>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="card-body" style="padding: 0;">
+    {% if notifications %}
+      <div style="display: grid;">
+        {% for n in notifications %}
+          <div style="padding: 1.15rem 1.5rem; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; background: {{ '#ffffff' if n.is_read else '#f5f3ff' }}; transition: var(--transition);">
+            <div style="display: flex; gap: 1rem; align-items: flex-start;">
+              <div style="font-size: 1.5rem; width: 40px; height: 40px; border-radius: 50%; background: {{ '#e0e7ff' if not n.is_read else '#f1f5f9' }}; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                {% if n.type == 'leave' %}📋
+                {% elif n.type == 'outpass' %}🎫
+                {% elif n.type == 'emergency' %}🚨
+                {% elif n.type == 'complaint' %}🛠️
+                {% elif n.type == 'fee' %}💳
+                {% elif n.type == 'mess' %}🍽️
+                {% elif n.type == 'laundry' %}🧺
+                {% elif n.type == 'announcement' %}📢
+                {% else %}🔔{% endif %}
+              </div>
+              <div>
+                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                  <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--dark-navy);">
+                    {{ n.title }}
+                  </h4>
+                  {% if not n.is_read %}
+                    <span class="badge badge-primary" style="font-size: 0.65rem;">NEW</span>
+                  {% endif %}
+                  <span style="font-size: 0.72rem; color: var(--muted-text);">{{ n.created_at[:16] }}</span>
+                </div>
+                <p style="font-size: 0.88rem; color: var(--slate-text); margin-top: 0.25rem;">
+                  {{ n.message }}
+                </p>
+                {% if n.link %}
+                  <div style="margin-top: 0.5rem;">
+                    <a href="{{ n.link }}" class="btn btn-secondary btn-sm" style="padding: 2px 8px; font-size: 0.78rem;">
+                      View Details →
+                    </a>
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+
+            {% if not n.is_read %}
+              <div>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="markRead({{ n.id }}, this)" style="padding: 4px 8px; font-size: 0.75rem;">
+                  Mark Read
+                </button>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <div class="empty-state-icon">🔔</div>
+        <h4>No Notifications</h4>
+        <p>You do not have any notification records yet.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function markRead(notifId, btn) {
+  fetch(`/notifications/read/${notifId}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === 'success') {
+      const card = btn.closest('div[style*="padding"]');
+      if (card) card.style.background = '#ffffff';
+      btn.remove();
+    }
+  });
+}
+</script>
+{% endblock %}

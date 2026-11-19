@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+{% block title %}Room Management{% endblock %}
+{% block page_title %}Hostel Room & Bed Allocation{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  <!-- Allocate Student to Room -->
+  <div class="content-card" style="margin-bottom: 0;">
+    <div class="card-header-bar">
+      <h3>🛏️ Allocate Student to Room</h3>
+    </div>
+    <div class="card-body">
+      {% if unallocated_students %}
+        <form action="{{ url_for('warden_allocate_room') }}" method="POST">
+          <div class="form-group">
+            <label class="form-label" for="student_id">Select Unallocated Student <span style="color:var(--danger)">*</span></label>
+            <select id="student_id" name="student_id" class="form-select" required>
+              <option value="">Choose resident</option>
+              {% for u in unallocated_students %}
+                <option value="{{ u.id }}">
+                  {{ u.name }} ({{ u.email }}) — {{ u.hostel_block }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="room_id">Select Available Room <span style="color:var(--danger)">*</span></label>
+            <select id="room_id" name="room_id" class="form-select" required>
+              <option value="">Choose room with vacant beds</option>
+              {% for r in rooms %}
+                {% if r.occupancy < r.capacity and r.status != 'maintenance' %}
+                  <option value="{{ r.id }}">
+                    {{ r.block_name }} — Room {{ r.room_number }} (Occupancy: {{ r.occupancy }}/{{ r.capacity }})
+                  </option>
+                {% endif %}
+              {% endfor %}
+            </select>
+            <div class="form-hint">Only rooms with capacity remaining are listed. Over-allocation is strictly prohibited.</div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">
+            Confirm Room Allocation
+          </button>
+        </form>
+      {% else %}
+        <div class="empty-state" style="padding: 1.5rem 1rem;">
+          <div class="empty-state-icon" style="font-size: 2rem; color: #22c55e;">✓</div>
+          <h4>All Students Allocated</h4>
+          <p>Every registered resident is assigned to a room.</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Add New Room Record -->
+  <div class="content-card" style="margin-bottom: 0;">
+    <div class="card-header-bar">
+      <h3>➕ Add New Room Record</h3>
+    </div>
+    <div class="card-body">
+      <form action="{{ url_for('warden_add_room') }}" method="POST">
+        <div class="form-group">
+          <label class="form-label" for="block_id">Hostel Wing / Block <span style="color:var(--danger)">*</span></label>
+          <select id="block_id" name="block_id" class="form-select" required>
+            {% for b in blocks %}
+              <option value="{{ b.id }}">{{ b.name }} ({{ b.gender_type }})</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="room_number">Room Number <span style="color:var(--danger)">*</span></label>
+            <input type="text" id="room_number" name="room_number" class="form-control"
+                   placeholder="e.g. 101, 204" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="floor">Floor Level</label>
+            <input type="number" id="floor" name="floor" min="0" max="10" value="1" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="capacity">Bed Capacity <span style="color:var(--danger)">*</span></label>
+            <select id="capacity" name="capacity" class="form-select" required>
+              <option value="1">1 Sharing (Single)</option>
+              <option value="2" selected>2 Sharing (Double)</option>
+              <option value="3">3 Sharing (Triple)</option>
+              <option value="4">4 Sharing (Quad)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="notes">Room Notes / Amenities</label>
+          <input type="text" id="notes" name="notes" class="form-control"
+                 placeholder="e.g. Corner room with balcony, attach bath">
+        </div>
+
+        <button type="submit" class="btn btn-secondary btn-block">
+          Create Room Record
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- MASTER ROOMS DIRECTORY -->
+<div class="content-card">
+  <div class="card-header-bar">
+    <div>
+      <h3>🏢 Master Rooms Directory</h3>
+      <p>Tracking capacity and occupancy across all hostel blocks</p>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <!-- FILTERS -->
+    <form method="GET" action="{{ url_for('warden_rooms') }}" class="table-toolbar">
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <select name="block" class="form-select" style="width: auto;" onchange="this.form.submit()">
+          <option value="">All Wings</option>
+          {% for b in blocks %}
+            <option value="{{ b.id }}" {% if selected_block == (b.id | string) %}selected{% endif %}>
+              {{ b.name }}
+            </option>
+          {% endfor %}
+        </select>
+
+        <select name="status" class="form-select" style="width: auto;" onchange="this.form.submit()">
+          <option value="">All Statuses</option>
+          <option value="available" {% if selected_status == 'available' %}selected{% endif %}>Vacant / Available</option>
+          <option value="full" {% if selected_status == 'full' %}selected{% endif %}>Full Occupancy</option>
+          <option value="maintenance" {% if selected_status == 'maintenance' %}selected{% endif %}>Maintenance</option>
+        </select>
+
+        {% if selected_block or selected_status %}
+          <a href="{{ url_for('warden_rooms') }}" class="btn btn-secondary btn-sm" style="align-self: center;">Reset</a>
+        {% endif %}
+      </div>
+    </form>
+
+    <div class="table-responsive">
+      <table class="modern-table">
+        <thead>
+          <tr>
+            <th>Hostel Wing</th>
+            <th>Room Number</th>
+            <th>Floor</th>
+            <th>Capacity</th>
+            <th>Occupancy</th>
+            <th>Status</th>
+            <th>Notes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in rooms %}
+            <tr>
+              <td><b>{{ r.block_name }}</b></td>
+              <td><span style="font-weight: 700; color: var(--primary);">Room {{ r.room_number }}</span></td>
+              <td>Floor {{ r.floor }}</td>
+              <td>{{ r.capacity }} Beds</td>
+              <td>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                  <span style="font-weight: 700;">{{ r.occupancy }} / {{ r.capacity }}</span>
+                  <div style="flex: 1; min-width: 60px; height: 6px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                    <div style="height: 100%; width: {{ (r.occupancy / r.capacity * 100) }}%; background: {{ '#ef4444' if r.occupancy >= r.capacity else 'var(--primary)' }};"></div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                {% if r.occupancy >= r.capacity %}
+                  <span class="badge badge-danger">Full</span>
+                {% elif r.status == 'maintenance' %}
+                  <span class="badge badge-warning">Maintenance</span>
+                {% else %}
+                  <span class="badge badge-success">Available</span>
+                {% endif %}
+              </td>
+              <td style="font-size: 0.8rem; color: var(--muted-text);">{{ r.notes or 'Standard Room' }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

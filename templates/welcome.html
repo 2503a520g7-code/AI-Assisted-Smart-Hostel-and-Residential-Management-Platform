@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to AIAC — Smart Hostel & Residential Management</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏢</text></svg>">
+  <style>
+    .welcome-container {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(135deg, #f5f3ff 0%, #eef2ff 50%, #f8fafc 100%);
+    }
+
+    .welcome-header {
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .welcome-hero {
+      flex: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 3rem 1.5rem 4rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .welcome-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #e0e7ff;
+      color: #3730a3;
+      padding: 0.4rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+    }
+
+    .welcome-title {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: var(--dark-navy);
+      text-align: center;
+      line-height: 1.2;
+      margin-bottom: 0.75rem;
+    }
+
+    .welcome-title span {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--purple-accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .welcome-subtitle {
+      font-size: 1.1rem;
+      color: var(--muted-text);
+      text-align: center;
+      max-width: 680px;
+      margin-bottom: 2.75rem;
+      line-height: 1.6;
+    }
+
+    .portal-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .portal-card {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2.25rem;
+      box-shadow: var(--shadow-md);
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .portal-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: var(--primary);
+    }
+
+    .portal-card.warden-card::before {
+      background: linear-gradient(90deg, #312e81, #4f46e5);
+    }
+
+    .portal-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--border-focus);
+    }
+
+    .portal-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 14px;
+      background: var(--primary-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .warden-card .portal-icon {
+      background: #e0e7ff;
+    }
+
+    .portal-name {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--dark-navy);
+      margin-bottom: 0.5rem;
+    }
+
+    .portal-desc {
+      font-size: 0.9rem;
+      color: var(--slate-text);
+      line-height: 1.55;
+      margin-bottom: 1.75rem;
+      flex: 1;
+    }
+
+    .portal-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .welcome-features {
+      margin-top: 3.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      width: 100%;
+      max-width: 900px;
+    }
+
+    .feature-pill {
+      background: rgba(255, 255, 255, 0.7);
+      border: 1px solid var(--border);
+      padding: 0.85rem 1.15rem;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--slate-text);
+    }
+
+    .welcome-footer {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--muted-text);
+      font-size: 0.82rem;
+      border-top: 1px solid var(--border);
+      background: #ffffff;
+    }
+
+    @media (max-width: 640px) {
+      .welcome-title {
+        font-size: 1.85rem;
+      }
+      .portal-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="welcome-container">
+  <!-- Top Navigation Header -->
+  <header class="welcome-header">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+      <div class="brand-logo" style="width: 40px; height: 40px; font-size: 1.1rem;">AI</div>
+      <div>
+        <h1 style="font-size: 1.15rem; font-weight: 800; color: var(--dark-navy); margin: 0;">AIAC Hostel</h1>
+        <span style="font-size: 0.75rem; color: var(--muted-text); font-weight: 600;">Smart Residence Platform</span>
+      </div>
+    </div>
+    <div style="display: flex; gap: 0.5rem;">
+      <a href="{{ url_for('login') }}" class="btn btn-secondary btn-sm">Student Portal</a>
+      <a href="{{ url_for('warden_login') }}" class="btn btn-primary btn-sm">Warden Desk</a>
+    </div>
+  </header>
+
+  <!-- Flash Messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div style="max-width: 900px; width: 100%; margin: 1rem auto 0; padding: 0 1.5rem;">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">
+            <span>{{ message }}</span>
+            <button type="button" class="close-btn">&times;</button>
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Main Hero Content -->
+  <main class="welcome-hero">
+    <div class="welcome-badge">
+      🏫 Central Campus Residential Complex
+    </div>
+    <h2 class="welcome-title">
+      Welcome to <span>AIAC Smart Hostel</span>
+    </h2>
+    <p class="welcome-subtitle">
+      A comprehensive residential management system for college students and hostel wardens. Choose your portal below to sign in or register your room account.
+    </p>
+
+    <!-- Two Main Portal Choices -->
+    <div class="portal-grid">
+      <!-- 1. Student Portal Card -->
+      <div class="portal-card">
+        <div class="portal-icon">🎓</div>
+        <h3 class="portal-name">Student Residential Portal</h3>
+        <p class="portal-desc">
+          For enrolled hostel students. Manage your assigned room, submit outing and vacation requests, view weekly mess menus, pay hostel & dhobi fees, report maintenance complaints, and trigger emergency alerts.
+        </p>
+        <div class="portal-actions">
+          <a href="{{ url_for('login') }}" class="btn btn-primary btn-block" style="padding: 0.8rem; font-weight: 600;">
+            🔑 Student Sign In
+          </a>
+          <a href="{{ url_for('register') }}" class="btn btn-secondary btn-block" style="padding: 0.75rem; font-weight: 600;">
+            📝 New Student Registration
+          </a>
+        </div>
+      </div>
+
+      <!-- 2. Warden Portal Card -->
+      <div class="portal-card warden-card">
+        <div class="portal-icon">🛡️</div>
+        <h3 class="portal-name">Warden Administration Desk</h3>
+        <p class="portal-desc">
+          Authorized hostel administration access. View registered student directory, review and approve leave permits, manage room allocations, oversee dining & laundry schedules, handle campus emergencies, and post notices.
+        </p>
+        <div class="portal-actions">
+          <a href="{{ url_for('warden_login') }}" class="btn btn-primary btn-block" style="background: linear-gradient(135deg, #1e1b4b 0%, #4338ca 100%); padding: 0.8rem; font-weight: 600;">
+            🏢 Warden Desk Sign In
+          </a>
+          <div style="font-size: 0.78rem; color: var(--muted-text); text-align: center; margin-top: 0.25rem;">
+            🔒 Staff credentials authorized by Chief Warden Office
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Features Highlights -->
+    <div class="welcome-features">
+      <div class="feature-pill">
+        <span style="font-size: 1.25rem;">🎫</span>
+        <div>Digital Movement Outpass</div>
+      </div>
+      <div class="feature-pill">
+        <span style="font-size: 1.25rem;">🍽️</span>
+        <div>Weekly Mess Timetable</div>
+      </div>
+      <div class="feature-pill">
+        <span style="font-size: 1.25rem;">🚨</span>
+        <div>24/7 Emergency Response</div>
+      </div>
+      <div class="feature-pill">
+        <span style="font-size: 1.25rem;">🧺</span>
+        <div>Laundry & Fee Ledgers</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="welcome-footer">
+    <div>AIAC — AI-Assisted Smart Hostel & Residential Management Platform</div>
+    <div style="margin-top: 4px; font-size: 0.76rem; color: #94a3b8;">
+      Authorized college email domain: <b>@{{ college_email_domain }}</b> · 24/7 Emergency Hotline: <b>{{ emergency_security }}</b>
+    </div>
+  </footer>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

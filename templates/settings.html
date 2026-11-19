@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_title %}{{ 'Platform Configuration' if is_warden else 'Account Settings' }}{% endblock %}
+
+{% block content %}
+{% if is_warden %}
+  <!-- WARDEN / ADMIN SYSTEM SETTINGS -->
+  <div style="max-width: 800px; margin: 0 auto;">
+    <div class="content-card">
+      <div class="card-header-bar">
+        <div>
+          <h3>⚙️ Campus & Hostel Global Settings</h3>
+          <p>Configure institutional email domain, emergency contacts, and rules</p>
+        </div>
+      </div>
+      <div class="card-body">
+        <form action="{{ url_for('warden_settings') }}" method="POST">
+          <div class="form-group">
+            <label class="form-label" for="hostel_name">Hostel / Campus Name</label>
+            <input type="text" id="hostel_name" name="hostel_name" class="form-control"
+                   value="{{ settings.hostel_name }}" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="college_email_domain">Allowed College Email Domain</label>
+            <input type="text" id="college_email_domain" name="college_email_domain" class="form-control"
+                   value="{{ settings.college_email_domain }}" required>
+            <div class="form-hint">
+              Used to validate student registration emails (e.g. <code>college.edu</code> or <code>*</code> to permit all domains).
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="curfew_time">Mandatory Night Curfew Time</label>
+              <input type="text" id="curfew_time" name="curfew_time" class="form-control"
+                     value="{{ settings.curfew_time }}" placeholder="09:30 PM" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="emergency_warden">Warden Hotline Phone</label>
+              <input type="text" id="emergency_warden" name="emergency_warden" class="form-control"
+                     value="{{ settings.emergency_warden }}" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="emergency_medical">Medical & Ambulance Helpline</label>
+              <input type="text" id="emergency_medical" name="emergency_medical" class="form-control"
+                     value="{{ settings.emergency_medical }}" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="emergency_security">Chief Security Desk Phone</label>
+              <input type="text" id="emergency_security" name="emergency_security" class="form-control"
+                     value="{{ settings.emergency_security }}" required>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="emergency_electrician">Campus Electrician / Maintenance</label>
+            <input type="text" id="emergency_electrician" name="emergency_electrician" class="form-control"
+                   value="{{ settings.emergency_electrician }}" required>
+          </div>
+
+          <div style="margin-top: 1.5rem;">
+            <button type="submit" class="btn btn-primary">
+              Save Platform Configuration
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+{% else %}
+  <!-- STUDENT SETTINGS -->
+  <div style="max-width: 700px; margin: 0 auto; display: grid; gap: 1.5rem;">
+    <div class="content-card">
+      <div class="card-header-bar">
+        <h3>👤 Profile Preferences</h3>
+      </div>
+      <div class="card-body">
+        <div style="display: grid; gap: 0.75rem;">
+          <div><b>Registered Name:</b> {{ student.name }}</div>
+          <div><b>College Email:</b> {{ student.email }}</div>
+          <div><b>Assigned Block:</b> {{ student.hostel_block }}</div>
+          <div><b>Academic Year:</b> {{ student.academic_year }}</div>
+        </div>
+        <div style="margin-top: 1rem;">
+          <a href="{{ url_for('profile') }}" class="btn btn-primary btn-sm">Edit Contact & Password</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <div class="card-header-bar">
+        <h3>🔔 Notification Preferences</h3>
+      </div>
+      <div class="card-body">
+        <div style="display: grid; gap: 0.75rem;">
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem;">
+            <input type="checkbox" checked disabled> In-App Leave & Outpass Alerts (Mandatory)
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem;">
+            <input type="checkbox" checked disabled> Maintenance & Complaint Updates (Mandatory)
+          </label>
+          <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem;">
+            <input type="checkbox" checked disabled> Emergency Broadcasts (Mandatory)
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <a href="{{ url_for('logout') }}" class="btn btn-danger">
+        🚪 Log Out of Resident Account
+      </a>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}
